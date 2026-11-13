@@ -13,8 +13,8 @@ sealed record Tools(string Root, string Python, string[]? PythonArgs = null)
     public bool OwnPythonMissing => !File.Exists(Python) && Directory.Exists(Path.Combine(Root, "python"));
 
     public const string OwnPythonMissingText =
-        "The builder's own Python (tools/python/python.exe) is missing. Your antivirus probably removed it: restore it " +
-        "from quarantine, or unpack the zip again into a folder your antivirus allows, then try again.";
+        "Falta o Python do próprio Builder (tools/python/python.exe). O seu antivírus provavelmente tirou: restaure " +
+        "da quarentena, ou descompacte o zip de novo numa pasta que o antivírus permita, e tente de novo.";
 
     public static Tools? Find()
     {
@@ -91,8 +91,8 @@ sealed class Runner
     {
         this.tools = tools;
         this.args = args;
-        if (workers is <= 0) throw new ArgumentOutOfRangeException(nameof(workers), "Build workers must be positive.");
-        if (memoryGb is <= 0) throw new ArgumentOutOfRangeException(nameof(memoryGb), "Build memory must be positive.");
+        if (workers is <= 0) throw new ArgumentOutOfRangeException(nameof(workers), "O número de processos tem de ser positivo.");
+        if (memoryGb is <= 0) throw new ArgumentOutOfRangeException(nameof(memoryGb), "A memória tem de ser positiva.");
         this.workers = workers;
         this.ngxSdk = ngxSdk;
         this.memoryGb = memoryGb;
@@ -153,11 +153,11 @@ sealed class Runner
                     Line?.Invoke(line);
                 }
                 p.WaitForExit();
-                Finished?.Invoke(cancelled ? "cancelled" : p.ExitCode == 0 ? null : error ?? "The build tools stopped without saying why. See the details.");
+                Finished?.Invoke(cancelled ? "cancelled" : p.ExitCode == 0 ? null : error ?? "As ferramentas de geração pararam sem dizer por quê. Veja os detalhes.");
             }
             catch (Exception e)
             {
-                Finished?.Invoke(tools.OwnPythonMissing ? Tools.OwnPythonMissingText : "The build tools could not start: " + e.Message);
+                Finished?.Invoke(tools.OwnPythonMissing ? Tools.OwnPythonMissingText : "As ferramentas de geração não abriram: " + e.Message);
             }
         });
     }
@@ -177,7 +177,7 @@ sealed class Runner
             string? lastError = null;
             p.ErrorDataReceived += (_, e) => { if (!string.IsNullOrWhiteSpace(e.Data)) lastError = e.Data; };
             p.BeginErrorReadLine();
-            var result = (false, "The game files could not be read.");
+            var result = (false, "Não deu para ler os arquivos do jogo.");
             var answered = false;
             while (await p.StandardOutput.ReadLineAsync() is { } line)
             {
@@ -190,16 +190,16 @@ sealed class Runner
             if (!answered)
             {
                 if (lastError != null && lastError.Contains("Microsoft Store", StringComparison.OrdinalIgnoreCase))
-                    return (false, "Python 3 was not found: the 'python' command on this PC is the Microsoft Store shortcut, which only opens " +
-                                   "the Store. Install Python 3 from python.org (not the Store version), or use the full Hookshot Builder package.");
-                return (false, lastError ?? "The game tools stopped without saying why (exit code " + p.ExitCode + ").");
+                    return (false, "O Python 3 não foi achado: o comando 'python' deste PC é o atalho da Microsoft Store, que só abre " +
+                                   "a loja. Instale o Python 3 de python.org (não a versão da loja), ou use o pacote completo do Hookshot Builder.");
+                return (false, lastError ?? "As ferramentas do jogo pararam sem dizer por quê (código de saída " + p.ExitCode + ").");
             }
             return result;
         }
         catch (Exception)
         {
             if (tools.OwnPythonMissing) return (false, Tools.OwnPythonMissingText);
-            return (false, "Python 3 was not found. Install it from python.org (not the Microsoft Store build), or use the full Hookshot Builder package.");
+            return (false, "O Python 3 não foi achado. Instale de python.org (não a versão da Microsoft Store), ou use o pacote completo do Hookshot Builder.");
         }
     }
 }

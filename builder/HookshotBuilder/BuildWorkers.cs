@@ -6,7 +6,7 @@ namespace HookshotBuilder;
 /// A choice for this window only. Automatic leaves the build tools' inherited override and memory policy alone.
 static class BuildWorkers
 {
-    public const string Automatic = "Automatic";
+    public const string Automatic = "Automático";
 
     public static IEnumerable<object> Choices(int processors)
     {
@@ -18,12 +18,12 @@ static class BuildWorkers
     {
         string text when text == Automatic => null,
         int count when count > 0 => count,
-        _ => throw new ArgumentException("Choose Automatic or a positive number of build workers."),
+        _ => throw new ArgumentException("Escolha Automático ou um número positivo de processos."),
     };
 
     public static void Apply(ProcessStartInfo info, int? count)
     {
-        if (count is <= 0) throw new ArgumentOutOfRangeException(nameof(count), "Build workers must be positive.");
+        if (count is <= 0) throw new ArgumentOutOfRangeException(nameof(count), "O número de processos tem de ser positivo.");
         if (count is int selected) info.Environment["HOOKSHOT_JOBS"] = selected.ToString(CultureInfo.InvariantCulture);
     }
 }
@@ -50,12 +50,12 @@ static class BuildMemory
     {
         string text when text == Automatic => null,
         int gb when gb > 0 => gb,
-        _ => throw new ArgumentException("Choose Automatic or a positive amount of build memory."),
+        _ => throw new ArgumentException("Escolha Automático ou uma quantidade positiva de memória."),
     };
 
     public static void Apply(ProcessStartInfo info, int? gb)
     {
-        if (gb is <= 0) throw new ArgumentOutOfRangeException(nameof(gb), "Build memory must be positive.");
+        if (gb is <= 0) throw new ArgumentOutOfRangeException(nameof(gb), "A memória tem de ser positiva.");
         if (gb is int selected) info.Environment["HOOKSHOT_MEM_LIMIT_GB"] = selected.ToString(CultureInfo.InvariantCulture);
     }
 }

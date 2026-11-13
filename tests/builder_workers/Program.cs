@@ -73,7 +73,7 @@ static class Program
         Require(ShaderStep.Reason("@@stage shaders Preparing shaders") is null && ShaderStep.Reason("done shaders") is null,
                 "Other lines are not a skipped step.");
         Require(ShaderStep.Skipped(began: true, reason: null) is null, "Prepared shaders must get their check mark.");
-        Require(ShaderStep.Skipped(began: false, reason: null) is { } none && none.Contains("first start"),
+        Require(ShaderStep.Skipped(began: false, reason: null) is { } none && none.Contains("primeira vez"),   // (fork: em português)
                 "No @@stage shaders (an older make_game, or none ran) must not be a check mark.");
         Require(ShaderStep.Skipped(began: true, reason: "the game printed nothing for 15 minutes and was stopped") is { } stopped
                 && stopped.Contains("15 minutes"), "A stopped preparation must say why under its row.");
@@ -116,7 +116,7 @@ static class Program
             foreach (var invalid in new object?[] { null, "4", "automatic", 0, -1, 2L, new object() })
             {
                 try { BuildWorkers.Selected(invalid); throw new Exception("Invalid selection accepted."); }
-                catch (ArgumentException e) { Require(e.Message.Contains("Automatic"), "Invalid choice needs an actionable message."); }
+                catch (ArgumentException e) { Require(e.Message.Contains(BuildWorkers.Automatic), "Invalid choice needs an actionable message."); }
             }
             foreach (var invalid in new[] { 0, -1 })
             {
@@ -149,7 +149,7 @@ static class Program
             foreach (var invalid in new object?[] { null, "8", "automatic", 0, -4, 8L, new object() })
             {
                 try { BuildMemory.Selected(invalid); throw new Exception("Invalid memory selection accepted."); }
-                catch (ArgumentException e) { Require(e.Message.Contains("Automatic"), "Invalid memory choice needs an actionable message."); }
+                catch (ArgumentException e) { Require(e.Message.Contains(BuildWorkers.Automatic), "Invalid memory choice needs an actionable message."); }
             }
             foreach (var invalid in new[] { 0, -4 })
             {

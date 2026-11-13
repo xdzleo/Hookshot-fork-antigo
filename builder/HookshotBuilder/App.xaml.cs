@@ -13,7 +13,7 @@ public partial class App : Application
         try { _ = BuilderHome.Base; }
         catch (Exception error) when (error is IOException or UnauthorizedAccessException or ArgumentException)
         {
-            var why = "The Builder home could not be opened. " + error.Message;
+            var why = "Não deu para abrir a pasta do Builder. " + error.Message;
             if (e.Args.Length > 0 && e.Args[0] == "--cli")
             {
                 using var output = new StreamWriter(Console.OpenStandardOutput(), new UTF8Encoding(false)) { AutoFlush = true };

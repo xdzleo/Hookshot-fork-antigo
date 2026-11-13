@@ -59,6 +59,7 @@ public partial class MainWindow : Window
         TrackBox.SelectedIndex = Array.IndexOf(TrackIds, Track);
         TrackBox.SelectionChanged += TrackChanged;
         clock.Tick += (_, _) => Tick();
+        SourceUrl.Text = Sources.Saved ?? "";   // (fork) a fonte usada da última vez
         Drop += Dropped;
         SourceInitialized += (_, _) =>
         {
@@ -71,8 +72,8 @@ public partial class MainWindow : Window
         Loaded += (_, _) => Start();
         var tools = Tools.Find();
         ToolsNote.Text = tools != null
-            ? "Nothing else to install: Hookshot's own build tools are here, downloaded and checked by its setup."
-            : "Hookshot's build tools are missing from its folder. Press Build and Hookshot offers to download them again.";
+            ? "Nada mais para instalar: as ferramentas de geração do Hookshot estão aqui, baixadas e conferidas pelo instalador dele."
+            : "As ferramentas de geração do Hookshot não estão na pasta dele. Clique em Gerar e o Hookshot oferece baixá-las de novo.";
         SetStep(0);
         Refresh();
     }
@@ -94,7 +95,7 @@ public partial class MainWindow : Window
         var started = Stopwatch.StartNew();
         if (Environment.GetCommandLineArgs().Contains("--update"))
         {
-            SplashText.Text = "Getting the update…";
+            SplashText.Text = "Baixando a atualização…";
             await Task.Delay(900);
             ShowMain();
             Updater.FromCommandLine(this);
@@ -102,16 +103,16 @@ public partial class MainWindow : Window
         }
         if (LaunchArg() is { } launchFolder)   // (Hookshot Launcher.exe in the game folder)
         {
-            SplashText.Text = "Starting Hookshot…";
+            SplashText.Text = "Abrindo o Hookshot…";
             await Task.Delay(700);
             ShowMain();
             ShowLauncher(launchFolder);
             return;
         }
-        SplashText.Text = "Looking for your game files…";
+        SplashText.Text = "Procurando os arquivos do seu jogo…";
         var found = await Task.Run(Finder.FindDumps);
         dumps.AddRange(found);
-        SplashText.Text = found.Count switch { 0 => "No game files found yet", 1 => "Found 1 game file", _ => $"Found {found.Count} game files" };
+        SplashText.Text = found.Count switch { 0 => "Nenhum arquivo do jogo achado ainda", 1 => "1 arquivo do jogo achado", _ => $"{found.Count} arquivos do jogo achados" };
         var wait = 1700 - (int)started.ElapsedMilliseconds;
         if (wait > 0) await Task.Delay(wait);
         ApplySettings();
@@ -187,27 +188,27 @@ public partial class MainWindow : Window
         switch (mode)
         {
             case Mode.UpdateGame:
-                FilesTitle.Text = "Update available";
-                FilesSub.Text = $"Hookshot {updateTarget} is available. Your game is {game}: Update builds it again from the game files kept in " +
-                                "its folder, compiling only what changed.";
-                BuildButton.Content = "Update";
+                FilesTitle.Text = "Atualização disponível";
+                FilesSub.Text = $"O Hookshot {updateTarget} está disponível. O seu jogo é o {game}: Atualizar gera de novo a partir dos arquivos do jogo guardados " +
+                                "na pasta dele, compilando só o que mudou.";
+                BuildButton.Content = "Atualizar";
                 break;
             case Mode.UpToDate:
-                FilesTitle.Text = "Your game is up to date";
+                FilesTitle.Text = "O seu jogo está em dia";
                 FilesSub.Text = latestTag == null
-                    ? $"Your game is {game}, as this builder. GitHub did not answer, so newer versions could not be checked."
-                    : $"{game} is the latest version. Pick game files below only to build it again from scratch.";
-                BuildButton.Content = "Play";
+                    ? $"O seu jogo é o {game}, igual a este Builder. O GitHub não respondeu, então não deu para procurar versões mais novas."
+                    : $"O {game} é a versão mais nova. Escolha arquivos do jogo abaixo só se quiser gerar de novo do zero.";
+                BuildButton.Content = "Jogar";
                 break;
             case Mode.UpdateBuilder:
-                FilesTitle.Text = "Build your game";
-                FilesSub.Text = $"Hookshot Builder {updateTarget} is available (this one is {builder}): update it first, then build.";
-                BuildButton.Content = "Update builder";
+                FilesTitle.Text = "Gere o seu jogo";
+                FilesSub.Text = $"O Hookshot Builder {updateTarget} está disponível (este é o {builder}): atualize primeiro, depois gere.";
+                BuildButton.Content = "Atualizar o Builder";
                 break;
             default:
-                FilesTitle.Text = "Build your game";
-                FilesSub.Text = "Pick your game files and where the game goes. Hookshot does the rest, once.";
-                BuildButton.Content = "Build the game";
+                FilesTitle.Text = "Gere o seu jogo";
+                FilesSub.Text = "Escolha os arquivos do jogo e onde ele vai ficar. O Hookshot faz o resto, uma vez só.";
+                BuildButton.Content = "Gerar o jogo";
                 break;
         }
         BuildButton.IsEnabled = mode != Mode.Build || (SourceReady && OutPath.Text.Length > 2);
@@ -235,17 +236,17 @@ public partial class MainWindow : Window
         ShowPage(LaunchPage);
         latestTag = Environment.GetEnvironmentVariable("HOOKSHOT_LATEST_TAG") is { Length: > 0 } fake ? (fake == "none" ? null : fake) : await Updater.LatestTag(Track);
         updateTarget = Updater.Target(latestTag, Tools.Find()?.Version, Track);   // (GitHub's newest, else this builder's own)
-        if (updateTarget == null) LaunchStatus.Text = "Could not check for updates (GitHub did not answer)";
+        if (updateTarget == null) LaunchStatus.Text = "Não deu para procurar atualizações (o GitHub não respondeu)";
         else if (game != null && game != updateTarget && GameVersion(folder) != null)
         {
-            LaunchStatus.Text = $"Update available: {updateTarget}";
+            LaunchStatus.Text = $"Atualização disponível: {updateTarget}";
             LaunchStatus.Foreground = new SolidColorBrush(Color.FromRgb(0xB9, 0xC8, 0xFF));
             LaunchStatus.FontWeight = FontWeights.SemiBold;
             LaunchUpdate.Visibility = Visibility.Visible;
         }
         else if (game != null && game != updateTarget)
-            LaunchStatus.Text = $"{updateTarget} is out: build this folder again with the Hookshot Builder to get it";
-        else LaunchStatus.Text = latestTag == null ? "Up to date with this builder (GitHub did not answer)" : "Up to date";
+            LaunchStatus.Text = $"O {updateTarget} saiu: gere esta pasta de novo com o Hookshot Builder para ter ele";
+        else LaunchStatus.Text = latestTag == null ? "Em dia com este Builder (o GitHub não respondeu)" : "Em dia";
     }
 
     /// (a folder built before it kept its game files has a version too: only shown)
@@ -282,7 +283,7 @@ public partial class MainWindow : Window
 
     // ---- the update track (Updater.cs): the one chosen in the Track menu, saved; by default these tools' own ----
     static readonly string[] TrackIds = { Updater.Release, Updater.Candidate, Updater.Nightly };
-    static readonly string[] TrackNames = { "Release", "Release candidate", "Nightly" };
+    static readonly string[] TrackNames = { "Estável", "Candidata", "Noturna" };
     string? chosenTrack;
     string Track
     {
@@ -310,7 +311,7 @@ public partial class MainWindow : Window
     /// (going to an older version, from another track: asked first)
     bool OlderOk(string? have) =>
         !Switching || !Updater.Newer(have, updateTarget) ||
-        MessageBox.Show(this, $"{updateTarget} is older than {have}, the version you have now. Install {updateTarget}?", "Hookshot",
+        MessageBox.Show(this, $"O {updateTarget} é mais antigo que o {have}, a versão que você tem agora. Instalar o {updateTarget}?", "Hookshot",
                         MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes;
 
     void LaunchPlayClick(object sender, RoutedEventArgs e)
@@ -333,17 +334,17 @@ public partial class MainWindow : Window
         LaunchShareStatus.Visibility = Visibility.Visible;
         if (tools == null)
         {
-            LaunchShareStatus.Text = "The builder's tools were not found: start it again from its own folder.";
+            LaunchShareStatus.Text = "As ferramentas do Builder não foram achadas: abra ele de novo pela pasta dele.";
             return;
         }
         LaunchShare.IsEnabled = false;
-        LaunchShareStatus.Text = "Saving…";
+        LaunchShareStatus.Text = "Salvando…";
         var folder = launchFolder;
         var (zip, template, count, error) = await Task.Run(() => SharePipelines(tools, folder, DownloadsFolder()));
         LaunchShare.IsEnabled = true;
         if (zip == null)
         {
-            LaunchShareStatus.Text = error ?? "The pipeline list could not be saved.";
+            LaunchShareStatus.Text = error ?? "Não deu para salvar a lista de pipelines.";
             return;
         }
         var copied = false;
@@ -352,10 +353,10 @@ public partial class MainWindow : Window
         try { Process.Start(new ProcessStartInfo(File.Exists(explorer) ? explorer : "explorer.exe", $"/select,\"{zip}\"") { UseShellExecute = true }); } catch (Exception) { }
         var opened = false;
         try { Process.Start(new ProcessStartInfo(ShareIssue) { UseShellExecute = true }); opened = true; } catch (Exception) { }
-        LaunchShareStatus.Text = $"Saved {System.IO.Path.GetFileName(zip)} ({count} pipelines) in {System.IO.Path.GetDirectoryName(zip)}. " +
-            (copied ? "The report is copied. " : "The report is in the zip. ") +
-            (opened ? "Issue #2034 is open in your browser: attach" : $"Open {ShareIssue} and attach") +
-            " the zip to a comment, then paste the report and say where you played.";
+        LaunchShareStatus.Text = $"{System.IO.Path.GetFileName(zip)} salvo ({count} pipelines) em {System.IO.Path.GetDirectoryName(zip)}. " +
+            (copied ? "O relatório foi copiado. " : "O relatório está no zip. ") +
+            (opened ? "A issue #2034 está aberta no navegador: anexe" : $"Abra {ShareIssue} e anexe") +
+            " o zip num comentário, depois cole o relatório e diga onde você jogou.";
     }
 
     /// nx2/pipeline_share.py --json: (the zip, the template, the pipelines) or the reason there is none
@@ -387,7 +388,7 @@ public partial class MainWindow : Window
             if (!line.StartsWith("{"))   // (the script stopped before its answer: what it said last)
             {
                 var last = stderr.Result.Trim().Split('\n').LastOrDefault()?.Trim();
-                return (null, null, 0, "The pipeline list could not be saved" + (string.IsNullOrEmpty(last) ? "." : ": " + last));
+                return (null, null, 0, "Não deu para salvar a lista de pipelines" + (string.IsNullOrEmpty(last) ? "." : ": " + last));
             }
             using var doc = System.Text.Json.JsonDocument.Parse(line);
             var r = doc.RootElement;
@@ -397,7 +398,7 @@ public partial class MainWindow : Window
         }
         catch (Exception ex)
         {
-            return (null, null, 0, tools.OwnPythonMissing ? Tools.OwnPythonMissingText : "The pipeline list could not be saved: " + ex.Message);
+            return (null, null, 0, tools.OwnPythonMissing ? Tools.OwnPythonMissingText : "Não deu para salvar a lista de pipelines: " + ex.Message);
         }
     }
 
@@ -439,14 +440,14 @@ public partial class MainWindow : Window
         {
             romfs = s.Romfs;
             exefs = s.Exefs;
-            foldersNote = $"Using the folders {romfs} and {exefs} (as last time)";
+            foldersNote = $"Usando as pastas {romfs} e {exefs} (como da última vez)";
         }
         else if (s.Nup != null && File.Exists(s.Nup))
         {
             if (!dumps.Any(d => string.Equals(d.Path, s.Nup, StringComparison.OrdinalIgnoreCase)))
             {
                 var info = new FileInfo(s.Nup);
-                dumps.Insert(0, new Dump(info.FullName, "Last time", info.Length, info.LastWriteTime));
+                dumps.Insert(0, new Dump(info.FullName, "Da última vez", info.Length, info.LastWriteTime));
             }
             chosenNup = s.Nup;
         }
@@ -480,27 +481,44 @@ public partial class MainWindow : Window
                 MakeRows(update: false, shaders: true);
                 SetStep(1);
                 ShowPage(BuildPage);
-                rows["read"].Begin(); rows["read"].Done(); rows["read"].Small("Version checked");
+                rows["read"].Begin(); rows["read"].Done(); rows["read"].Small("Versão conferida");
                 rows["lift"].Begin(); rows["lift"].Done();
-                rows["compile"].Begin(); rows["compile"].Small("31 of 58 files");
+                rows["compile"].Begin(); rows["compile"].Small("31 de 58 arquivos");
                 SetProgress(0.54);
-                BuildNote.Text = "About 19 minutes left · your PC stays usable";
+                BuildNote.Text = "Faltam uns 19 minutos · o seu PC continua livre para usar";
+                break;
+            case "fonte":   // (fork) baixando da fonte
+                StageList.Children.Clear();
+                rows.Clear();
+                foreach (var (id, text, i) in new[] { ("find", "Procurando o jogo na sua fonte", 1), ("get", "Baixando o jogo", 2), ("unpack", "Juntando e descompactando os arquivos", 3) })
+                {
+                    var row = new StepRow(i, text, last: i == 3);
+                    rows[id] = row;
+                    StageList.Children.Add(row.Root);
+                }
+                SetStep(1);
+                ShowPage(BuildPage);
+                BuildTitle.Text = "Baixando o seu jogo";
+                rows["find"].Begin(); rows["find"].Done(); rows["find"].Small("The Legend of Zelda: Ocarina of Time (Switch 2)");
+                rows["get"].Begin(); rows["get"].Small("10,3 GB de 22,6 GB · 14,2 MB/s · 38 pares, 12 fontes");
+                SetProgress(0.7 * 10.3 / 22.6);
+                BuildNote.Text = "Faltam uns 15 minutos para o download";
                 break;
             case "ready":
                 finished = OutPath.Text;
                 ShowReady();
                 break;
             case "problem":
-                ShowProblem("Files of the builder's own compiler are missing (clang.exe in tools\\llvm-mingw\\bin).", tools: true);
+                ShowProblem("Faltam arquivos do compilador do Builder (clang.exe em tools\\llvm-mingw\\bin).", tools: true);
                 break;
             case "update":
                 BeginUpdate(OutPath.Text, "honest-eta");
-                rows["download"].Done(); rows["download"].Small("3 MB · build tools unchanged");
+                rows["download"].Done(); rows["download"].Small("3 MB · ferramentas sem mudança");
                 rows["read"].Begin(); rows["read"].Done();
                 rows["lift"].Begin(); rows["lift"].Done();
-                rows["compile"].Begin(); rows["compile"].Small("7 of 516 files");
+                rows["compile"].Begin(); rows["compile"].Small("7 de 516 arquivos");
                 SetProgress(0.62);
-                BuildNote.Text = "About 3 minutes left. Your current game stays as it is until the new one is complete.";
+                BuildNote.Text = "Faltam uns 3 minutos. O seu jogo atual fica como está até o novo ficar pronto.";
                 break;
         }
     }
@@ -544,7 +562,7 @@ public partial class MainWindow : Window
     void SetStep(int on)
     {
         StepItems.Children.Clear();
-        var names = new[] { "Game files", "Build", "Play" };
+        var names = new[] { "Arquivos do jogo", "Geração", "Jogar" };
         for (var i = 0; i < names.Length; i++)
         {
             if (i > 0)
@@ -600,7 +618,7 @@ public partial class MainWindow : Window
         {
             DumpList.Children.Add(new TextBlock
             {
-                Text = "No .nup files in Downloads, Desktop, Documents or the top folders of your drives. Browse to yours, or drop it on this window.",
+                Text = "Nenhum arquivo .nup em Downloads, Área de Trabalho, Documentos ou nas primeiras pastas dos seus discos. Procure o seu, solte ele nesta janela ou baixe da sua fonte abaixo.",
                 Style = (Style)FindResource("Note"), Margin = new Thickness(16, 14, 16, 14),
             });
             return;
@@ -631,10 +649,10 @@ public partial class MainWindow : Window
     Border Chip(string path)
     {
         checks.TryGetValue(path, out var c);
-        var (text, brush) = c == null ? ("Checking…", "InkFaint")
-            : c.Value.Ok ? ("✓ Supported version", "Go")
-            : c.Value.Text.StartsWith("This is build") ? ("Not the supported version", "Warn")
-            : ("Can't be read", "Bad");
+        var (text, brush) = c == null ? ("Conferindo…", "InkFaint")
+            : c.Value.Ok ? ("✓ Versão compatível", "Go")
+            : c.Value.Text.StartsWith("This is build") ? ("Não é a versão compatível", "Warn")
+            : ("Não dá para ler", "Bad");
         var chip = new Border { Style = (Style)FindResource("Chip"), Child = new TextBlock { Text = text, FontSize = 12, Foreground = (Brush)FindResource(brush), VerticalAlignment = VerticalAlignment.Center } };
         if (c is { Ok: false }) chip.ToolTip = c.Value.Text;
         if (c is { Ok: true }) chip.Background = (Brush)FindResource("GoSoft");
@@ -667,6 +685,12 @@ public partial class MainWindow : Window
         if (chosenNup == null && romfs == null && dumps.Count > 0 && tools != null) { chosenNup = dumps[0].Path; FillDumps(); }
         checking = false;
         Refresh();
+        // (fork) o .nup baixado da fonte passou na conferência: a geração segue sozinha
+        if (buildWhenChecked)
+        {
+            buildWhenChecked = false;
+            if (SourceReady) BuildNow();
+        }
     }
 
     void Choose(string path)
@@ -708,12 +732,12 @@ public partial class MainWindow : Window
             var free = new DriveInfo(root).AvailableFreeSpace;
             SpaceBar.Value = Math.Min(1, NeededBytes / (double)Math.Max(1, free));
             SpaceBar.Foreground = (Brush)FindResource(free >= NeededBytes ? "Go" : "Bad");
-            SpaceText.Text = $"Needs 45 GB · {root.TrimEnd('\\')} has {free >> 30} GB free";
+            SpaceText.Text = $"Precisa de 45 GB · {root.TrimEnd('\\')} tem {free >> 30} GB livres";
             SpaceText.Foreground = (Brush)FindResource(free >= NeededBytes ? "InkSoft" : "Bad");
         }
         catch (Exception)
         {
-            SpaceText.Text = "Needs 45 GB";
+            SpaceText.Text = "Precisa de 45 GB";
         }
         RefreshMode();
     }
@@ -722,14 +746,14 @@ public partial class MainWindow : Window
     /// when both are on an SSD (or their drive cannot be told, as on a network share)
     string? HardDriveWarning()
     {
-        foreach (var (what, folder) in new[] { ("game folder", OutPath.Text), ("build files folder", Storage.Work) })
+        foreach (var (what, folder) in new[] { ("pasta do jogo", OutPath.Text), ("pasta dos arquivos de geração", Storage.Work) })
         {
             if (Disk.Spinning(folder) != true) continue;
             string root;
             try { root = System.IO.Path.GetPathRoot(System.IO.Path.GetFullPath(folder))!.TrimEnd('\\'); }
             catch (Exception e) when (e is ArgumentException or NotSupportedException or PathTooLongException) { root = folder; }
-            return $"The {what} is on a hard drive ({root}). An SSD builds the game much faster: build there if you can.\n\n" +
-                   "Choose OK to build here anyway, or Cancel to choose another folder.";
+            return $"A {what} está num HD ({root}). Num SSD o jogo é gerado bem mais rápido: gere lá se puder.\n\n" +
+                   "Escolha OK para gerar aqui mesmo assim, ou Cancelar para escolher outra pasta.";
         }
         return null;
     }
@@ -739,7 +763,7 @@ public partial class MainWindow : Window
         if (runner != null || e.Data.GetData(DataFormats.FileDrop) is not string[] { Length: > 0 } paths) return;
         foreach (var p in paths)
         {
-            if (p.EndsWith(".nup", StringComparison.OrdinalIgnoreCase) && File.Exists(p)) AddDump(p, "Dropped");
+            if (p.EndsWith(".nup", StringComparison.OrdinalIgnoreCase) && File.Exists(p)) AddDump(p, "Solto na janela");
             else if (Directory.Exists(System.IO.Path.Combine(p, "romfs")) && Directory.Exists(System.IO.Path.Combine(p, "exefs")))
                 UseFolders(System.IO.Path.Combine(p, "romfs"), System.IO.Path.Combine(p, "exefs"));
         }
@@ -747,21 +771,21 @@ public partial class MainWindow : Window
 
     void BrowseNup(object sender, RoutedEventArgs e)
     {
-        var d = new OpenFileDialog { Filter = "Game file (*.nup)|*.nup", Title = "Choose your game file" };
-        if (d.ShowDialog(this) == true) AddDump(d.FileName, "Chosen");
+        var d = new OpenFileDialog { Filter = "Arquivo do jogo (*.nup)|*.nup", Title = "Escolha o arquivo do seu jogo" };
+        if (d.ShowDialog(this) == true) AddDump(d.FileName, "Escolhido");
     }
 
     /// The other way in: an unpacked game, its romfs and exefs folders (or one folder holding both)
     void BrowseFolders(object sender, RoutedEventArgs e)
     {
-        var both = PickFolder("Choose the folder with romfs and exefs (or the romfs folder)");
+        var both = PickFolder("Escolha a pasta com romfs e exefs (ou a pasta romfs)");
         if (both == null) return;
         if (Directory.Exists(System.IO.Path.Combine(both, "romfs")) && Directory.Exists(System.IO.Path.Combine(both, "exefs")))
         {
             UseFolders(System.IO.Path.Combine(both, "romfs"), System.IO.Path.Combine(both, "exefs"));
             return;
         }
-        var ex = PickFolder("Now choose the exefs folder");
+        var ex = PickFolder("Agora escolha a pasta exefs");
         if (ex != null) UseFolders(both, ex);
     }
 
@@ -769,14 +793,14 @@ public partial class MainWindow : Window
     {
         if (!File.Exists(System.IO.Path.Combine(x, "main")))
         {
-            MessageBox.Show(this, "That exefs folder has no file named main.", "Hookshot");
+            MessageBox.Show(this, "Essa pasta exefs não tem o arquivo main.", "Hookshot");
             return;
         }
         sourcePicked = true;
         romfs = r;
         exefs = x;
         chosenNup = null;
-        foldersNote = $"Using the folders {r} and {x}";
+        foldersNote = $"Usando as pastas {r} e {x}";
         FillDumps();
         Refresh();
     }
@@ -787,11 +811,11 @@ public partial class MainWindow : Window
         return d.ShowDialog() == true ? d.FolderName : null;
     }
 
-    void BrowseOut(object sender, RoutedEventArgs e) => OutPath.Text = PickFolder("Choose where the game goes") ?? OutPath.Text;
+    void BrowseOut(object sender, RoutedEventArgs e) => OutPath.Text = PickFolder("Escolha onde o jogo vai ficar") ?? OutPath.Text;
 
     void BrowseWork(object sender, RoutedEventArgs e)
     {
-        if (PickFolder("Choose where Hookshot keeps its build files") is not { } picked) return;
+        if (PickFolder("Escolha onde o Hookshot guarda os arquivos de geração") is not { } picked) return;
         ChangeWork(picked);
     }
 
@@ -802,7 +826,7 @@ public partial class MainWindow : Window
         try { Storage.MoveWork(picked); }
         catch (Exception x) when (x is IOException or UnauthorizedAccessException)
         {
-            MessageBox.Show(this, $"Hookshot cannot keep its build files there: {x.Message}", "Hookshot");
+            MessageBox.Show(this, $"O Hookshot não pode guardar os arquivos de geração aí: {x.Message}", "Hookshot");
         }
         Refresh();
     }
@@ -814,8 +838,8 @@ public partial class MainWindow : Window
         var work = Storage.Work;
         WorkReset.Visibility = Storage.WorkChosen ? Visibility.Visible : Visibility.Collapsed;
         WorkNote.Text = Storage.KeepBuildFiles
-            ? $"Build files: about {Storage.Gb(Storage.BuildFilesBytes)}, kept in {work} so that updates are quick (HOOKSHOT_KEEP_BUILD_FILES)."
-            : $"Build files: about {Storage.Gb(Storage.BuildFilesBytes)} in {work} while it builds; when the game is ready about 1 GB stays (the compiled code) so that updates compile only what changed.";
+            ? $"Arquivos de geração: uns {Storage.Gb(Storage.BuildFilesBytes)}, guardados em {work} para as atualizações serem rápidas (HOOKSHOT_KEEP_BUILD_FILES)."
+            : $"Arquivos de geração: uns {Storage.Gb(Storage.BuildFilesBytes)} em {work} durante a geração; com o jogo pronto, fica 1 GB (o código compilado) para as atualizações compilarem só o que mudou.";
         WorkNote.Foreground = (Brush)FindResource("InkSoft");
         try
         {
@@ -823,7 +847,7 @@ public partial class MainWindow : Window
             var free = new DriveInfo(root).AvailableFreeSpace;
             if (free < Storage.BuildFilesBytes)
             {
-                WorkNote.Text += $" {root.TrimEnd('\\')} has only {Storage.Gb(free)} free.";
+                WorkNote.Text += $" {root.TrimEnd('\\')} só tem {Storage.Gb(free)} livres.";
                 WorkNote.Foreground = (Brush)FindResource("Bad");
             }
         }
@@ -834,11 +858,12 @@ public partial class MainWindow : Window
     {
         if (LanguageBox.SelectedItem is not Language l) return;
         lang = l;
-        CancelButton.Content = T(S.Cancel);
-        BackButton.Content = T(S.Back);
-        OpenButton.Content = T(S.OpenFolder);
-        PlayText.Text = T(S.Play);
-        ShowLog.Content = T(ShowLog.IsChecked == true ? S.HideDetails : S.ShowDetails);
+        // (fork: a janela fica em português; o idioma escolhido é o do jogo)
+        CancelButton.Content = "Cancelar";
+        BackButton.Content = "Voltar";
+        OpenButton.Content = "Abrir a pasta";
+        PlayText.Text = "Jogar";
+        ShowLog.Content = ShowLog.IsChecked == true ? "Esconder detalhes" : "Mostrar detalhes";
     }
 
     // ================= 2: the build =================
@@ -860,20 +885,26 @@ public partial class MainWindow : Window
                 if (!OlderOk(Tools.Find()?.Version)) return;
                 SaveSettings();
                 BuildButton.IsEnabled = false;
-                BuildButton.Content = "Getting the new builder…";
+                BuildButton.Content = "Baixando o Builder novo…";
                 try { await Updater.RunLatestSetup(this, Array.Empty<string>(), updateTarget, Switching); }
                 catch (Exception ex)
                 {
-                    MessageBox.Show(this, ex.Message + " You can also download HookshotBuilder.exe from the releases page.", "Hookshot");
+                    MessageBox.Show(this, ex.Message + " Você também pode baixar o HookshotBuilder.exe na página de versões.", "Hookshot");
                     RefreshMode();
                 }
                 return;
         }
+        BuildNow();
+    }
+
+    /// The build itself, from the chosen game files (also the end of "Baixar da sua fonte", whatever the button would say)
+    void BuildNow()
+    {
         SaveSettings();
         var tools = Tools.Find();
         if (tools == null)
         {
-            ShowProblem("The build tools are not in Hookshot's folder.", tools: true);
+            ShowProblem("As ferramentas de geração não estão na pasta do Hookshot.", tools: true);
             return;
         }
         var args = new List<string>();
@@ -888,13 +919,13 @@ public partial class MainWindow : Window
     }
 
     const string DlssLicense =
-        "NVIDIA DLSS is NVIDIA's, not Hookshot's. With it ticked, the build downloads NVIDIA's DLSS SDK (release v310.9.16) from " +
-        "github.com/NVIDIA/DLSS, under NVIDIA's own license, the NVIDIA RTX SDKs license:\n\n" +
+        "O NVIDIA DLSS é da NVIDIA, não do Hookshot. Marcado, a geração baixa o SDK do DLSS da NVIDIA (versão v310.9.16) de " +
+        "github.com/NVIDIA/DLSS, sob a licença da própria NVIDIA, a licença dos NVIDIA RTX SDKs:\n\n" +
         "https://github.com/NVIDIA/DLSS/blob/9981c6350dc58c0ce21f024fd65e31e851c31689/LICENSE.txt\n\n" +
-        "Its files stay on this PC (in the builder's ngx-sdk folder, and nvngx_dlss.dll and nvngx_dlssg.dll in the game " +
-        "folder's ngx folder). " +
-        "Hookshot never includes or shares them: never share a game folder built with them.\n\n" +
-        "Do you accept NVIDIA's license?";
+        "Os arquivos dela ficam neste PC (na pasta ngx-sdk do Builder, e nvngx_dlss.dll e nvngx_dlssg.dll na pasta ngx " +
+        "da pasta do jogo). " +
+        "O Hookshot nunca inclui nem compartilha esses arquivos: nunca compartilhe uma pasta de jogo gerada com eles.\n\n" +
+        "Você aceita a licença da NVIDIA?";
 
     /// NVIDIA's license accepted on the DLSS tick, kept in the settings (DlssLicense): an update keeps a folder's DLSS by it.
     /// It was the SDK's LICENSE.txt, a download: with the SDK gone, the update built without DLSS and its runtime went
@@ -912,13 +943,13 @@ public partial class MainWindow : Window
     }
 
     const string FsrLicense =
-        "AMD FSR 4 is AMD's, not Hookshot's. With it ticked, the build downloads AMD's FSR runtime for Vulkan (FidelityFX SDK " +
-        "v2.4.0: amd_fidelityfx_loader_vk.dll and amd_fidelityfx_upscaler_vk.dll, signed by AMD) from " +
-        "github.com/GPUOpen-LibrariesAndSDKs/FidelityFX-SDK, each file checked against its SHA-256, under AMD's FSR SDK license:\n\n" +
+        "O AMD FSR 4 é da AMD, não do Hookshot. Marcado, a geração baixa o runtime do FSR da AMD para Vulkan (FidelityFX SDK " +
+        "v2.4.0: amd_fidelityfx_loader_vk.dll e amd_fidelityfx_upscaler_vk.dll, assinados pela AMD) de " +
+        "github.com/GPUOpen-LibrariesAndSDKs/FidelityFX-SDK, cada arquivo conferido pelo SHA-256, sob a licença do FSR SDK da AMD:\n\n" +
         "https://github.com/GPUOpen-LibrariesAndSDKs/FidelityFX-SDK/blob/7539ae8b6568ad29ed78a753404351daf3b5cca7/Kits/FidelityFX/docs/license.md\n\n" +
-        "Its files stay on this PC (in the builder's ffx-sdk folder, and the two DLLs with LICENSE-AMD-FSR-SDK.md in the game " +
-        "folder).\n\n" +
-        "Do you accept AMD's license?";
+        "Os arquivos dela ficam neste PC (na pasta ffx-sdk do Builder, e as duas DLLs com o LICENSE-AMD-FSR-SDK.md na pasta " +
+        "do jogo).\n\n" +
+        "Você aceita a licença da AMD?";
 
     /// AMD's license accepted on the FSR 4 tick. A tick saved before the builder asked builds with FSR 4 as it did, its DLLs
     /// the player's own, and fetches nothing until it is ticked again
@@ -939,12 +970,12 @@ public partial class MainWindow : Window
 
     static readonly (string Id, string Build, string Update)[] Stages =
     {
-        ("download", "", "Download the update"),
-        ("read", "Read your game files", "Read the game files kept in the folder"),
-        ("lift", "Translate the game to PC code", "Translate the game to PC code"),
-        ("compile", "Compile", "Compile changed files"),
-        ("finish", "Put the game together", "Swap in the new game"),
-        (ShaderStep.Id, "Prepare the shaders", "Prepare the shaders"),
+        ("download", "", "Baixar a atualização"),
+        ("read", "Ler os arquivos do seu jogo", "Ler os arquivos do jogo guardados na pasta"),
+        ("lift", "Traduzir o jogo para código de PC", "Traduzir o jogo para código de PC"),
+        ("compile", "Compilar", "Compilar os arquivos que mudaram"),
+        ("finish", "Montar o jogo", "Trocar pelo jogo novo"),
+        (ShaderStep.Id, "Preparar os shaders", "Preparar os shaders"),
     };
     static readonly Dictionary<string, (double From, double Size)> WithShaders = new()
     {
@@ -974,7 +1005,7 @@ public partial class MainWindow : Window
             rows[list[i].Id] = row;
             StageList.Children.Add(row.Root);
         }
-        if (update) rows["read"].Small("Your game files are kept: the .nup isn't needed");
+        if (update) rows["read"].Small("Os arquivos do seu jogo estão guardados: o .nup não é necessário");
     }
 
     /// dlss: NVIDIA DLSS, its license accepted: NVIDIA's SDK fetched into Storage.NgxSdk first (only what is missing), and built in.
@@ -1001,7 +1032,7 @@ public partial class MainWindow : Window
             updating = false;
             MakeRows(update: false, shaders: prepareNow);
             SetStep(1);
-            BuildTitle.Text = "Building your game";
+            BuildTitle.Text = "Gerando o seu jogo";
             UpdateBar.Visibility = Visibility.Collapsed;
             RingBox.Visibility = Visibility.Visible;
         }
@@ -1070,7 +1101,7 @@ public partial class MainWindow : Window
         else if (FilesLine.Match(line) is { Success: true } m) filesOf = int.Parse(m.Groups[1].Value);
         else if (FileLine.IsMatch(line)) filesDone++;
         if (current == "compile" && filesChanged < 0 && filesOf > 0 && rows.TryGetValue("compile", out var c))
-            c.Small($"{filesDone} of {filesOf} files");
+            c.Small($"{filesDone} de {filesOf} arquivos");
         AddLog(line);
     }
 
@@ -1107,9 +1138,9 @@ public partial class MainWindow : Window
     void ChangedFiles()
     {
         if (filesChanged < 0 || !rows.TryGetValue("compile", out var row)) return;
-        row.Small(filesChanged == 0 ? "Everything is already built"
-                : filesChanged >= filesOf ? $"{filesCompiled} of {filesChanged} files"
-                : $"{filesCompiled} of {filesChanged} changed files");
+        row.Small(filesChanged == 0 ? "Tudo já está compilado"
+                : filesChanged >= filesOf ? $"{filesCompiled} de {filesChanged} arquivos"
+                : $"{filesCompiled} de {filesChanged} arquivos que mudaram");
     }
 
     void AddLog(string line)
@@ -1141,27 +1172,27 @@ public partial class MainWindow : Window
     {
         foreach (var r in rows.Values) r.Tick();
         if (runner == null) return;
-        var tail = updating ? ". Your current game stays as it is until the new one is complete." : " · your PC stays usable";
+        var tail = updating ? ". O seu jogo atual fica como está até o novo ficar pronto." : " · o seu PC continua livre para usar";
         if (current == "compile")
         {
             // (the timer of the compile itself, and the countdown build.py works out from what this PC measured before)
             var left = compileEta >= 0 ? TimeLeft(compileEta)
                 : compiled > 0.03 ? TimeLeft(compileClock.Elapsed.TotalSeconds / compiled * (1 - compiled) + 60)
-                : "Estimating…";
-            BuildNote.Text = $"Compiling {Clock(compileClock.Elapsed)} · {left}{tail}";
+                : "Calculando…";
+            BuildNote.Text = $"Compilando {Clock(compileClock.Elapsed)} · {left}{tail}";
             return;
         }
-        BuildNote.Text = (updating ? "Working…" : "Usually about 45 minutes") + tail;
+        BuildNote.Text = (updating ? "Trabalhando…" : "Costuma levar uns 45 minutos") + tail;
     }
 
     static string Clock(TimeSpan t) => $"{(int)t.TotalMinutes}:{t.Seconds:00}";
 
     static string TimeLeft(double seconds)
     {
-        if (seconds < 45) return "Less than a minute left";
-        if (seconds < 90) return "About a minute left";
+        if (seconds < 45) return "Falta menos de um minuto";
+        if (seconds < 90) return "Falta mais ou menos um minuto";
         var minutes = (int)Math.Round(seconds / 60);
-        return minutes >= 60 ? $"About {minutes / 60} h {minutes % 60} min left" : $"About {minutes} minutes left";
+        return minutes >= 60 ? $"Faltam uns {minutes / 60} h {minutes % 60} min" : $"Faltam uns {minutes} minutos";
     }
 
     void Ended(string? failure)
@@ -1187,7 +1218,7 @@ public partial class MainWindow : Window
             return;
         }
         if (current != null && rows.TryGetValue(current, out var row)) row.Stopped();
-        ShowProblem(failure ?? "The build tools stopped without saying why.", tools: failure?.Contains("antivirus", StringComparison.OrdinalIgnoreCase) == true);
+        ShowProblem(failure ?? "As ferramentas de geração pararam sem dizer por quê.", tools: failure?.Contains("antivirus", StringComparison.OrdinalIgnoreCase) == true);
     }
 
     void LogToggled(object sender, RoutedEventArgs e)
@@ -1195,7 +1226,7 @@ public partial class MainWindow : Window
         var show = ShowLog.IsChecked == true;
         Log.Visibility = show ? Visibility.Visible : Visibility.Collapsed;
         StepCard.Visibility = show ? Visibility.Collapsed : Visibility.Visible;
-        ShowLog.Content = T(show ? S.HideDetails : S.ShowDetails);
+        ShowLog.Content = show ? "Esconder detalhes" : "Mostrar detalhes";
         if (show)
         {
             Log.Text = log.ToString();
@@ -1214,9 +1245,9 @@ public partial class MainWindow : Window
     void ShowReady()
     {
         SetStep(2);
-        ReadyTitle.Text = updating ? "Your game is updated" : "Your game is ready";
-        var compiledNote = thisCompile > 0 ? $" (compiled in {Span(TimeSpan.FromSeconds(thisCompile))})" : "";
-        ReadyNote.Text = $"{(updating ? "Updated" : "Built")} in {Span(elapsed.Elapsed)}{compiledNote}{Against(builtIn ?? elapsed.Elapsed)} · {finished}";
+        ReadyTitle.Text = updating ? "O seu jogo foi atualizado" : "O seu jogo está pronto";
+        var compiledNote = thisCompile > 0 ? $" (compilado em {Span(TimeSpan.FromSeconds(thisCompile))})" : "";
+        ReadyNote.Text = $"{(updating ? "Atualizado" : "Gerado")} em {Span(elapsed.Elapsed)}{compiledNote}{Against(builtIn ?? elapsed.Elapsed)} · {finished}";
         if (!updating && Environment.GetEnvironmentVariable("HOOKSHOT_UI_PREVIEW") == null)
             Finder.Shortcuts(finished, DesktopTick.IsChecked == true, StartTick.IsChecked == true);
         else if (updating && Environment.GetEnvironmentVariable("HOOKSHOT_UI_PREVIEW") == null)
@@ -1226,6 +1257,20 @@ public partial class MainWindow : Window
             Finder.RefreshShortcuts(finished);
         }
         if (Finder.ShortcutError != null) AddLog("shortcut not made: " + Finder.ShortcutError);
+        if (fromSource && !updating)
+        {
+            // (fork) a cópia descompactada já está no jogo (o romfs por link, o exefs em .hookshot_exefs): sai. O download fica, para
+            // gerar de novo sem baixar; a nota diz onde está e quanto ocupa
+            fromSource = false;
+            try { if (Directory.Exists(UnpackFolder)) Directory.Delete(UnpackFolder, recursive: true); }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException) { AddLog("cópia descompactada não apagada: " + ex.Message); }
+            try
+            {
+                var bytes = new DirectoryInfo(DownloadFolder).EnumerateFiles("*", SearchOption.AllDirectories).Sum(f => f.Length);
+                ReadyNote.Text += $"\nO download da fonte ({Gb(bytes)}) ficou em {DownloadFolder}. Se precisar do espaço, pode apagar.";
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException) { }
+        }
         ShowPage(ReadyPage);
         _ = FreeAfterBuild();
     }
@@ -1237,14 +1282,14 @@ public partial class MainWindow : Window
         var (total, freeable) = await Task.Run(Storage.Measure);
         if (total < 100L << 20) return;
         // (both places when the build files are in a folder the player chose: the total counts both)
-        var where = Storage.WorkChosen ? $"{Storage.Base} and {Storage.Work}" : Storage.Base;
+        var where = Storage.WorkChosen ? $"{Storage.Base} e {Storage.Work}" : Storage.Base;
         StorageNote.Text = freeable >= 100L << 20
-            ? $"Hookshot Builder keeps {Storage.Gb(total)} on this PC ({where}). {Storage.Gb(freeable)} of it only makes the next " +
-              "update quicker and can be freed: your game keeps playing, and the next update then takes about as long as this build."
-            : $"Hookshot Builder keeps {Storage.Gb(total)} on this PC ({where}): the builder itself.";
+            ? $"O Hookshot Builder guarda {Storage.Gb(total)} neste PC ({where}). {Storage.Gb(freeable)} disso só deixa a próxima " +
+              "atualização mais rápida e pode ser liberado: o seu jogo continua funcionando, e a próxima atualização leva mais ou menos o tempo desta geração."
+            : $"O Hookshot Builder guarda {Storage.Gb(total)} neste PC ({where}): o próprio Builder.";
         FreeButton.Visibility = freeable >= 100L << 20 ? Visibility.Visible : Visibility.Collapsed;
         FreeButton.IsEnabled = true;
-        FreeButton.Content = "Free up space";
+        FreeButton.Content = "Liberar espaço";
         StorageRow.Visibility = Visibility.Visible;
     }
 
@@ -1264,11 +1309,11 @@ public partial class MainWindow : Window
     async void FreeSpace(object sender, RoutedEventArgs e)
     {
         FreeButton.IsEnabled = false;
-        FreeButton.Content = "Freeing…";
+        FreeButton.Content = "Liberando…";
         var left = await Task.Run(() => Storage.Free());
         await ShowStorageUse();
         if (left >= 100L << 20)
-            StorageNote.Text += $" ({Storage.Gb(left)} could not be deleted: a file is in use. Close the game and the builder, and delete the folder's contents by hand.)";
+            StorageNote.Text += $" ({Storage.Gb(left)} não puderam ser apagados: um arquivo está em uso. Feche o jogo e o Builder e apague o conteúdo da pasta à mão.)";
     }
 
     void ShowStorage(object sender, RoutedEventArgs e) =>
@@ -1279,7 +1324,7 @@ public partial class MainWindow : Window
         if (finished.Length > 0) Finder.Shortcuts(finished, DesktopTick.IsChecked == true, StartTick.IsChecked == true);
     }
 
-    static string Span(TimeSpan t) => t.TotalHours >= 1 ? $"{(int)t.TotalHours} h {t.Minutes} min" : t.TotalMinutes >= 1 ? $"{(int)t.TotalMinutes} minutes" : $"{t.Seconds} seconds";
+    static string Span(TimeSpan t) => t.TotalHours >= 1 ? $"{(int)t.TotalHours} h {t.Minutes} min" : t.TotalMinutes >= 1 ? $"{(int)t.TotalMinutes} minutos" : $"{t.Seconds} segundos";
 
     /// This build beside the last one on this PC (build_times.json, through make_game.py's @@times): "last time 45 minutes
     /// (4 minutes faster)"
@@ -1288,9 +1333,9 @@ public partial class MainWindow : Window
         if (previousTotal <= 0) return "";
         var last = TimeSpan.FromSeconds(previousTotal);
         var diff = last.TotalSeconds - now.TotalSeconds;
-        var how = Math.Abs(diff) < 30 ? "about the same"
-                : diff > 0 ? $"{Span(TimeSpan.FromSeconds(diff))} faster" : $"{Span(TimeSpan.FromSeconds(-diff))} slower";
-        return $" · last time {Span(last)} ({how})";
+        var how = Math.Abs(diff) < 30 ? "mais ou menos igual"
+                : diff > 0 ? $"{Span(TimeSpan.FromSeconds(diff))} mais rápido" : $"{Span(TimeSpan.FromSeconds(-diff))} mais devagar";
+        return $" · da última vez {Span(last)} ({how})";
     }
 
     void OpenFolder(object sender, RoutedEventArgs e) =>
@@ -1311,29 +1356,29 @@ public partial class MainWindow : Window
         lastFailure = why;
         problemIsTools = tools;
         ProblemSteps.Children.Clear();
-        ProblemSub.Text = updating ? "Your current game is unchanged and still plays." : "Nothing was changed in your game folder.";
+        ProblemSub.Text = updating ? "O seu jogo atual não mudou e continua funcionando." : "Nada mudou na pasta do seu jogo.";
         if (tools)
         {
-            ProblemTitle.Text = "The build tools need repairing";
-            ProblemHead.Text = "Your antivirus removed part of the build tools";
-            ProblemText.Text = why + "\n\nAntivirus programs sometimes flag unsigned developer tools by mistake.";
+            ProblemTitle.Text = "As ferramentas de geração precisam de reparo";
+            ProblemHead.Text = "O seu antivírus tirou parte das ferramentas de geração";
+            ProblemText.Text = why + "\n\nAntivírus às vezes marcam por engano ferramentas de desenvolvimento sem assinatura.";
             var base_ = Storage.Base;
             foreach (var (n, s) in new[]
                      {
-                         (1, "Open Windows Security → Protection history, and restore the removed files."),
-                         (2, $"Or add {base_} to its exclusions."),
-                         (3, "Then press Repair: Hookshot downloads the tools again from their official releases and checks each one."),
+                         (1, "Abra Segurança do Windows → Histórico de proteção e restaure os arquivos removidos."),
+                         (2, $"Ou adicione {base_} às exclusões dele."),
+                         (3, "Depois clique em Reparar: o Hookshot baixa as ferramentas de novo das versões oficiais e confere cada uma."),
                      })
                 ProblemSteps.Children.Add(new TextBlock { Text = $"{n}.  {s}", Style = (Style)FindResource("Note"), FontSize = 14, Margin = new Thickness(0, 6, 0, 0) });
         }
         else
         {
-            ProblemTitle.Text = updating ? "The update stopped" : "The build stopped";
-            ProblemHead.Text = "What went wrong";
+            ProblemTitle.Text = updating ? "A atualização parou" : "A geração parou";
+            ProblemHead.Text = "O que deu errado";
             ProblemText.Text = why;
         }
         RepairButton.Visibility = tools ? Visibility.Visible : Visibility.Collapsed;
-        ProblemDetails.Content = "Show details";
+        ProblemDetails.Content = "Mostrar detalhes";
         if (!updating) SetStep(1);   // (the update keeps its versions in the head)
         ShowPage(ProblemPage);
     }
@@ -1355,7 +1400,7 @@ public partial class MainWindow : Window
         var lines = log.ToString().Split('\n');
         var text = $"Hookshot Builder {Tools.Find()?.Version ?? "(source)"} on Windows {Environment.OSVersion.Version}\n" +
                    $"{ProblemTitle.Text}: {lastFailure}\n\n" + string.Join("\n", lines.Skip(Math.Max(0, lines.Length - 200)));
-        try { Clipboard.SetText(text); CopyReport.Content = "Copied"; } catch (Exception) { }
+        try { Clipboard.SetText(text); CopyReport.Content = "Copiado"; } catch (Exception) { }
     }
 
     void Back(object sender, RoutedEventArgs e) => ToFiles();
@@ -1370,7 +1415,183 @@ public partial class MainWindow : Window
             Application.Current.Shutdown();
             return;
         }
-        Process.Start(new ProcessStartInfo("https://github.com/NotRexed/Hookshot/releases/latest") { UseShellExecute = true });
+        Process.Start(new ProcessStartInfo("https://github.com/xdzleo/Hookshot/releases/latest") { UseShellExecute = true });
+    }
+
+    // ================= (fork) baixar da sua fonte: SourceDownload.cs =================
+
+    bool fromSource, buildWhenChecked;
+
+    /// Onde o download e a cópia descompactada ficam: ao lado da pasta do jogo, no mesmo disco, para o romfs entrar no jogo por
+    /// link (make_game.py link_or_copy) em vez de ocupar o espaço duas vezes. HOOKSHOT_FONTE_DOWNLOAD: um download que já está no PC
+    string SourceFolder
+    {
+        get
+        {
+            var game = System.IO.Path.GetFullPath(OutPath.Text);
+            return System.IO.Path.Combine(System.IO.Path.GetDirectoryName(game) ?? game, "Hookshot - download da fonte");
+        }
+    }
+
+    string DownloadFolder => Environment.GetEnvironmentVariable("HOOKSHOT_FONTE_DOWNLOAD") is { Length: > 0 } d ? d : System.IO.Path.Combine(SourceFolder, "download");
+    string UnpackFolder => System.IO.Path.Combine(SourceFolder, "jogo");
+
+    static string Gb(long bytes) => $"{bytes / (double)(1L << 30):0.0} GB";
+
+    async void DownloadFromSource(object sender, RoutedEventArgs e)
+    {
+        if (runner != null || download != null) return;
+        if (Sources.Accept(SourceUrl.Text) is not { } url)
+        {
+            MessageBox.Show(this, "Cole o endereço da fonte, começando com https://", "Hookshot");
+            return;
+        }
+        if (OutPath.Text.Length <= 2)
+        {
+            MessageBox.Show(this, "Escolha onde o jogo vai ficar.", "Hookshot");
+            return;
+        }
+        if (Tools.Find() == null)
+        {
+            ShowProblem("As ferramentas de geração não estão na pasta do Hookshot.", tools: true);
+            return;
+        }
+        SaveSettings();
+        fromSource = true;
+        updating = false;
+        StageList.Children.Clear();
+        rows.Clear();
+        var steps = new[] { ("find", "Procurando o jogo na sua fonte"), ("get", "Baixando o jogo"), ("unpack", "Juntando e descompactando os arquivos") };
+        for (var i = 0; i < steps.Length; i++)
+        {
+            var row = new StepRow(i + 1, steps[i].Item2, last: i == steps.Length - 1);
+            rows[steps[i].Item1] = row;
+            StageList.Children.Add(row.Root);
+        }
+        SetStep(1);
+        BuildTitle.Text = "Baixando o seu jogo";
+        BuildNote.Text = "Procurando na sua fonte…";
+        UpdateBar.Visibility = Visibility.Collapsed;
+        RingBox.Visibility = Visibility.Visible;
+        CancelButton.Visibility = Visibility.Visible;
+        log.Clear();
+        Log.Clear();
+        SetProgress(0);
+        ShowPage(BuildPage);
+        elapsed.Restart();
+        clock.Start();
+        var cts = download = new CancellationTokenSource();
+        var ct = cts.Token;
+        var at = "find";
+        try
+        {
+            // 1. a fonte
+            rows["find"].Begin();
+            var (title, uri) = await Sources.Fetch(url, ct);
+            Sources.Save(url);
+            rows["find"].Done();
+            rows["find"].Small(title);
+            AddLog($"fonte: {url}\njogo: {title}\nendereço: {uri}");
+
+            // 2. o download (até 70% do anel)
+            at = "get";
+            rows["get"].Begin();
+            var folder = DownloadFolder;
+            AddLog("download em " + folder);
+            var started = Stopwatch.StartNew();
+            void Got(DownloadStatus s) => Dispatcher.BeginInvoke(() =>
+            {
+                if (!s.Metadata) { rows["get"].Small($"Procurando os dados do torrent… {s.Peers} pares"); return; }
+                var speed = s.BytesPerSecond > 0 ? $" · {s.BytesPerSecond / (double)(1 << 20):0.0} MB/s" : "";
+                var peers = s.Peers > 0 || s.Seeds > 0 ? $" · {s.Peers} pares, {s.Seeds} fontes" : "";
+                rows["get"].Small(s.Wanted > 0 ? $"{Gb(s.Done)} de {Gb(s.Wanted)}{speed}{peers}" : $"{Gb(s.Done)}{speed}");
+                SetProgress(0.7 * s.Fraction);
+                BuildNote.Text = s.BytesPerSecond >= 1024 && s.Wanted > s.Done
+                    ? TimeLeft((s.Wanted - s.Done) / (double)s.BytesPerSecond) + " para o download"
+                    : "Baixando… o seu PC continua livre para usar";
+            });
+            if (uri.StartsWith("magnet:", StringComparison.OrdinalIgnoreCase))
+                await Task.Run(() => Torrent.Download(uri, folder, Got, ct), ct);
+            else
+                await Torrent.DownloadDirect(uri, folder, Got, ct);
+            rows["get"].Done();
+            rows["get"].Small($"Baixado em {Span(started.Elapsed)}");
+
+            // 3. juntar e descompactar (de 70% a 100%)
+            at = "unpack";
+            rows["unpack"].Begin();
+            var archives = GameArchives.In(folder);
+            string game;
+            if (archives.Count == 0)
+            {
+                // (sem nada compactado: o .nup, ou as pastas, como vieram)
+                game = Directory.EnumerateFiles(folder, "*.nup", SearchOption.AllDirectories).OrderByDescending(f => new FileInfo(f).Length).FirstOrDefault()
+                       ?? Directory.EnumerateDirectories(folder, "romfs", SearchOption.AllDirectories).Select(d => System.IO.Path.GetDirectoryName(d)!).FirstOrDefault()
+                       ?? throw new SourceException("O download não trouxe arquivos compactados, nem o .nup, nem as pastas romfs e exefs.");
+                rows["unpack"].Small("Nada para descompactar");
+            }
+            else
+            {
+                var plan = await Task.Run(() => GameArchives.Check(archives), ct);
+                var names = string.Join(", ", archives.Select(a => System.IO.Path.GetFileName(a[0])));
+                AddLog($"arquivos: {names}\ncópia: {Gb(plan.Bytes)} em {UnpackFolder}");
+                var total = Math.Max(1, plan.Bytes);
+                var unpackClock = Stopwatch.StartNew();
+                var shown = Stopwatch.StartNew();
+                game = await Task.Run(() => GameArchives.Unpack(plan, UnpackFolder, (done, which, entry) =>
+                {
+                    if (shown.ElapsedMilliseconds < 200 && done < total) return;
+                    shown.Restart();
+                    Dispatcher.BeginInvoke(() =>
+                    {
+                        var seconds = unpackClock.Elapsed.TotalSeconds;
+                        var rate = seconds >= 1 ? done / seconds : 0;
+                        var file = archives.Count > 1 ? $"{System.IO.Path.GetFileName(archives[which][0])} ({which + 1} de {archives.Count})" : System.IO.Path.GetFileName(archives[which][0]);
+                        rows["unpack"].Small($"{Gb(done)} de {Gb(total)}{(rate > 0 ? $" · {rate / (1 << 20):0} MB/s" : "")} · {file}");
+                        SetProgress(0.7 + 0.3 * Math.Min(1, done / (double)total));
+                        BuildNote.Text = seconds >= 5 && rate > 0 ? TimeLeft((total - done) / rate) + " para juntar os arquivos" : entry;
+                    });
+                }, ct), ct);
+                rows["unpack"].Small($"{names} → {UnpackFolder}");
+            }
+            rows["unpack"].Done();
+            SetProgress(1);
+            download = null;
+            clock.Stop();
+
+            // 4. a geração de sempre, com o que veio
+            if (game.EndsWith(".nup", StringComparison.OrdinalIgnoreCase))
+            {
+                buildWhenChecked = true;
+                ToFiles();
+                AddDump(game, "Baixado da fonte");
+                return;
+            }
+            var exefsFolder = System.IO.Path.Combine(game, "exefs");
+            if (!Directory.Exists(exefsFolder) && Directory.Exists(System.IO.Path.Combine(game, ".hookshot_exefs")))
+                Directory.Move(System.IO.Path.Combine(game, ".hookshot_exefs"), exefsFolder);
+            ToFiles();
+            UseFolders(System.IO.Path.Combine(game, "romfs"), exefsFolder);
+            if (romfs != null && exefs != null) BuildNow();
+        }
+        catch (OperationCanceledException)
+        {
+            download = null;
+            clock.Stop();
+            fromSource = false;
+            ToFiles();
+        }
+        catch (Exception ex)
+        {
+            download = null;
+            clock.Stop();
+            fromSource = false;
+            if (rows.TryGetValue(at, out var row)) row.Stopped();
+            AddLog(ex.ToString());
+            ShowProblem(ex is SourceException ? ex.Message : $"{ex.GetType().Name}: {ex.Message}", tools: false);
+            ProblemTitle.Text = "O download parou";
+            ProblemSub.Text = "O que já foi baixado fica guardado: tentando de novo, o download continua de onde parou.";
+        }
     }
 
     // ================= the update (Updater.cs): the game started this app with --update <folder> =================
@@ -1382,7 +1603,7 @@ public partial class MainWindow : Window
         updating = true;
         OutPath.Text = folder;
         finished = "";
-        var to = tag ?? "the latest version";
+        var to = tag ?? "a versão mais nova";
         var from = GameVersion(folder) ?? Tools.Find()?.Version;
         StepPill.Visibility = Visibility.Collapsed;
         VersionChip.Visibility = Visibility.Visible;
@@ -1391,8 +1612,8 @@ public partial class MainWindow : Window
         // (the updates show no menu: the saved choice, as ApplySettings may not have run)
         MemoryBox.SelectedItem = BuildMemory.Saved(MemoryBox.ItemsSource.Cast<object>(), BuilderSettings.Load(SettingsPath)?.MemoryGb);
         MakeRows(update: true, shaders: prepareNow);
-        BuildTitle.Text = "Updating your game";
-        BuildNote.Text = "Getting the update…";
+        BuildTitle.Text = "Atualizando o seu jogo";
+        BuildNote.Text = "Baixando a atualização…";
         RingBox.Visibility = Visibility.Collapsed;
         UpdateBar.Visibility = Visibility.Visible;
         SetProgress(0);
@@ -1420,14 +1641,14 @@ public partial class MainWindow : Window
         download = null;
         rows.GetValueOrDefault("download")?.Stopped();
         ShowProblem(why, tools: false);
-        ProblemTitle.Text = "The update could not be downloaded";
+        ProblemTitle.Text = "Não deu para baixar a atualização";
     }
 
     /// The new tools are here: the folder built again with them (only what changed is compiled)
     internal void UpdateBuild(Tools tools, string folder)
     {
         download = null;
-        if (rows.TryGetValue("download", out var d)) { d.Done(); d.Small("Build tools checked"); }
+        if (rows.TryGetValue("download", out var d)) { d.Done(); d.Small("Ferramentas de geração conferidas"); }
         // (the saved tick also opts an existing game into DLSS. After a self-update ApplySettings has not run yet;
         // a folder already built with DLSS keeps it, its license accepted then: the settings' record, or for a license accepted
         // before the record, the SDK's LICENSE.txt)
@@ -1452,7 +1673,7 @@ public partial class MainWindow : Window
 
     void CloseWindow(object sender, RoutedEventArgs e)
     {
-        if (runner != null && MessageBox.Show(this, T(S.CloseQuestion), "Hookshot", MessageBoxButton.YesNo) != MessageBoxResult.Yes) return;
+        if (runner != null && MessageBox.Show(this, "Parar a geração e fechar?", "Hookshot", MessageBoxButton.YesNo) != MessageBoxResult.Yes) return;
         runner?.Cancel();
         Close();
     }

@@ -31,4 +31,11 @@
     <None Include="Fonts\Inter-LICENSE.txt" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
+  <!-- (fork) "Baixar da sua fonte": SharpCompress (MIT) junta os .rar, .zip e .7z do download; a ponte de libtorrent do Hydra
+       (MIT, Native/NOTICES.md) baixa o magnet. Os dois vão com o app -->
+  <ItemGroup>
+    <PackageReference Include="SharpCompress" Version="1.0.0" />
+    <None Include="Native\**" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
 </Project>

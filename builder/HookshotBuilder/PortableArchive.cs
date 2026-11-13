@@ -10,7 +10,7 @@ static class PortableArchive
     {
         if (tag.Length == 0 || tag.Length > 127 || tag[0] == '.' ||
             tag.Any(c => !(char.IsAsciiLetterOrDigit(c) || c is '.' or '_' or '+' or '-')))
-            throw new InvalidDataException("The release tag is not a setup version name.");
+            throw new InvalidDataException("A tag da versão não é um nome de versão do instalador.");
         var resolved = BuilderHome.Resolve(home, home, home, portableRequested: true);
         var versions = Path.Combine(resolved.Root, "versions");
         Directory.CreateDirectory(versions);
@@ -62,7 +62,7 @@ static class PortableArchive
         var version = Path.Combine(folder, "tools", "version.txt");
         if (!File.Exists(Path.Combine(folder, "HookshotBuilder.exe")) || !File.Exists(version) ||
             File.ReadAllText(version).Trim() != tag)
-            throw new InvalidDataException("The Builder archive does not contain the requested version.");
+            throw new InvalidDataException("O arquivo do Builder não tem a versão pedida.");
     }
 
     static void WritePointer(string path, string value)

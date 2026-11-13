@@ -14,7 +14,7 @@ namespace HookshotBuilder;
 /// folder keeps).
 static class Updater
 {
-    const string Latest = "https://api.github.com/repos/NotRexed/Hookshot/releases/latest";
+    const string Latest = "https://api.github.com/repos/xdzleo/Hookshot/releases/latest";
     const string Asset = "HookshotBuilder.zip";
     const string SetupAsset = "HookshotBuilder.exe";            // (the setup, builder/setup/setup.c: a release holds it and its list)
     const string SetupList = "hookshot-setup.txt";              // (scripts/make_setup_parts.py)
@@ -38,7 +38,7 @@ static class Updater
     // ---- the update tracks (the Track menu; by default the track of these tools). host/hos_update.c and
     // builder/linux/linux_update.py have the same rules ----
     public const string Release = "release", Candidate = "rc", Nightly = "nightly";
-    const string Releases = "https://api.github.com/repos/NotRexed/Hookshot/releases";
+    const string Releases = "https://api.github.com/repos/xdzleo/Hookshot/releases";
     static readonly System.Text.RegularExpressions.Regex NightlyName = new(@"-\d+-g[0-9a-f]+(-dirty)?$");
     static readonly System.Text.RegularExpressions.Regex ReleaseName = new(@"^v(\d+)\.(\d+)\.(\d+)(?:-rc\.(\d+))?$");
 
@@ -93,7 +93,7 @@ static class Updater
             {
                 try
                 {
-                    var list = await http.GetStringAsync("https://github.com/NotRexed/Hookshot/releases/download/nightly/" + SetupList);
+                    var list = await http.GetStringAsync("https://github.com/xdzleo/Hookshot/releases/download/nightly/" + SetupList);
                     foreach (var line in list.Split('\n'))
                         if (line.StartsWith("tag ")) return line[4..].Trim();
                 }
@@ -152,7 +152,7 @@ static class Updater
         {
             try
             {
-                var list = await http.GetStringAsync("https://github.com/NotRexed/Hookshot/releases/latest/download/" + SetupList);
+                var list = await http.GetStringAsync("https://github.com/xdzleo/Hookshot/releases/latest/download/" + SetupList);
                 foreach (var line in list.Split('\n'))
                     if (line.StartsWith("tag ")) return line[4..].Trim();
             }
@@ -172,7 +172,7 @@ static class Updater
         var token = w.DownloadToken;
         using var http = new HttpClient { Timeout = Timeout.InfiniteTimeSpan };
         http.DefaultRequestHeaders.UserAgent.ParseAdd("HookshotBuilder");
-        w.Note("Asking GitHub for the latest release");
+        w.Note("Perguntando ao GitHub pela versão mais nova");
         string? setupUrl = null, setupApiUrl = null, setupDigest = null;
         long setupSize = 0;
         using (var response = await GetWithRetries(w, http, tag == null ? Latest : Releases + "/tags/" + ReleaseOf(tag), token,
@@ -186,11 +186,11 @@ static class Updater
                     setupSize = asset.GetProperty("size").GetInt64();
                     setupDigest = DigestText(asset);
                 }
-        if (setupUrl == null) throw new InvalidOperationException("The latest release has no " + SetupAsset + ".");
+        if (setupUrl == null) throw new InvalidOperationException("A versão mais nova não tem o " + SetupAsset + ".");
         var cache = Path.Combine(BuilderHome.Base, "update");
         Directory.CreateDirectory(cache);
         var setup = Path.Combine(cache, SetupAsset);
-        w.Note("Downloading the new Hookshot Builder");
+        w.Note("Baixando o Hookshot Builder novo");
         await DownloadWithRetries(w, http, setupUrl, setupApiUrl, setup, setupSize, setupDigest, token);
         var si = new ProcessStartInfo(setup) { UseShellExecute = false, WorkingDirectory = cache };
         foreach (var arg in args) si.ArgumentList.Add(arg);
@@ -207,14 +207,14 @@ static class Updater
         var tools = Tools.Find();
         if (tools == null)
         {
-            w.DownloadFailed("The Hookshot tools were not found next to this app.");
+            w.DownloadFailed("As ferramentas do Hookshot não foram achadas ao lado deste programa.");
             return;
         }
         // (just downloaded, but another release than asked for: the setup installed the release before it (GitHub's latest link lags
         // right after a publish), and building here kept players on the old version while the builder said it updated)
         if (fetched && tag != null && tools.Version != null && tools.Version != tag)
         {
-            w.DownloadFailed($"The update installed {tools.Version}, not {tag}: GitHub's download links can lag right after a release. Try Update again in a few minutes.");
+            w.DownloadFailed($"A atualização instalou o {tools.Version}, não o {tag}: os links do GitHub podem demorar logo depois de uma versão sair. Tente Atualizar de novo em alguns minutos.");
             return;
         }
         // (already the new release, or just downloaded: no second download)
@@ -228,7 +228,7 @@ static class Updater
             var token = w.DownloadToken;
             using var http = new HttpClient { Timeout = Timeout.InfiniteTimeSpan };
             http.DefaultRequestHeaders.UserAgent.ParseAdd("HookshotBuilder");
-            w.Note("Asking GitHub for the latest release");
+            w.Note("Perguntando ao GitHub pela versão mais nova");
             string? newTag = null, url = null, setupUrl = null;
             string? apiUrl = null, setupApiUrl = null;
             string? digest = null, setupDigest = null;
@@ -261,7 +261,7 @@ static class Updater
                     else if (assetName == SetupList) hasList = true;
                 }
             }
-            if (newTag == null || (url == null && setupUrl == null)) throw new InvalidOperationException("The latest release has no " + Asset + ".");
+            if (newTag == null || (url == null && setupUrl == null)) throw new InvalidOperationException("A versão mais nova não tem o " + Asset + ".");
             if (newTag == tools.Version)
             {
                 w.UpdateBuild(tools, folder);
@@ -271,14 +271,14 @@ static class Updater
             // (hookshot) the name is a folder under builders\ that the update replaces: "..", "." or a name with a leading dot
             // would be the HookshotBuilder folder itself or not a version (the same rule as the setup's and Linux's lists)
             if (name.Length == 0 || name.Length > 128 || name[0] == '.')
-                throw new InvalidOperationException("The latest release's tag is not a version name.");
+                throw new InvalidOperationException("A tag da versão mais nova não é um nome de versão.");
             var cache = Path.Combine(BuilderHome.Base, "update");
             Directory.CreateDirectory(cache);
             // (a release with the setup and its list: the setup downloads only the parts that changed since the version installed (a few MB
             // when only the builder's code did), checks them and starts the new builder with these arguments. The whole zip is the fallback)
             if (setupUrl != null && hasList)
             {
-                w.Note($"Downloading the update for {newTag}");
+                w.Note($"Baixando a atualização para o {newTag}");
                 var setup = Path.Combine(cache, SetupAsset);
                 await DownloadWithRetries(w, http, setupUrl, setupApiUrl, setup, setupSize, setupDigest, token);
                 var ssi = new ProcessStartInfo(setup) { UseShellExecute = false, WorkingDirectory = cache };
@@ -288,11 +288,11 @@ static class Updater
                 Application.Current.Shutdown();
                 return;
             }
-            if (url == null) throw new InvalidOperationException("The latest release has no " + Asset + ".");
+            if (url == null) throw new InvalidOperationException("A versão mais nova não tem o " + Asset + ".");
             var zip = Path.Combine(cache, "HookshotBuilder-" + name + ".zip");
-            w.Note($"Downloading {Asset} of {newTag} ({size >> 20} MB)");
+            w.Note($"Baixando {Asset} do {newTag} ({size >> 20} MB)");
             await DownloadWithRetries(w, http, url, apiUrl, zip, size, digest, token, w.DownloadProgress);
-            w.Note("Unpacking the new version");
+            w.Note("Descompactando a versão nova");
             // (beside this app when that folder takes writing, else in the app data folder)
             var parent = Directory.GetParent(AppContext.BaseDirectory.TrimEnd('\\', '/'))!.FullName;
             string target;
@@ -310,7 +310,7 @@ static class Updater
             }
             try { File.Delete(zip); } catch (Exception) { }
             var exe = Path.Combine(target, "HookshotBuilder.exe");
-            if (!File.Exists(exe)) throw new FileNotFoundException("The download has no HookshotBuilder.exe (your antivirus may have removed it).");
+            if (!File.Exists(exe)) throw new FileNotFoundException("O download não tem o HookshotBuilder.exe (o seu antivírus pode ter tirado).");
             var si = new ProcessStartInfo(exe) { UseShellExecute = false, WorkingDirectory = target };
             foreach (var arg in new[] { "--update", folder, "--tag", newTag, "--fetched" }) si.ArgumentList.Add(arg);
             BuilderHome.PassTo(si);
@@ -319,11 +319,11 @@ static class Updater
         }
         catch (OperationCanceledException)
         {
-            w.DownloadFailed("The download was cancelled. Your game folder is unchanged.");
+            w.DownloadFailed("O download foi cancelado. A pasta do seu jogo não mudou.");
         }
         catch (Exception e)
         {
-            w.DownloadFailed(e.Message + " Your game folder is unchanged; you can also download the new version from GitHub yourself.");
+            w.DownloadFailed(e.Message + " A pasta do seu jogo não mudou; você também pode baixar a versão nova do GitHub você mesmo.");
         }
     }
 
@@ -357,10 +357,10 @@ static class Updater
             }
 
             if (attempt == RetryDelays.Length) break;
-            w.Note($"GitHub did not answer{StatusDetail(last)}. Retrying in {(int)RetryDelays[attempt].TotalSeconds} s...");
+            w.Note($"O GitHub não respondeu{StatusDetail(last)}. Tentando de novo em {(int)RetryDelays[attempt].TotalSeconds} s...");
             await Task.Delay(RetryDelays[attempt], token);
         }
-        throw new HttpRequestException($"GitHub's release API did not respond after {RetryDelays.Length + 1} attempts: {last?.Message}",
+        throw new HttpRequestException($"A API de versões do GitHub não respondeu depois de {RetryDelays.Length + 1} tentativas: {last?.Message}",
             last, (last as HttpRequestException)?.StatusCode);
     }
 
@@ -370,9 +370,9 @@ static class Updater
     static byte[] ParseDigest(string? digest)
     {
         if (digest == null || !digest.StartsWith("sha256:", StringComparison.Ordinal) || digest.Length != 71)
-            throw new InvalidDataException("GitHub did not provide a valid SHA-256 digest for this download.");
+            throw new InvalidDataException("O GitHub não deu um SHA-256 válido para este download.");
         try { return Convert.FromHexString(digest[7..]); }
-        catch (FormatException e) { throw new InvalidDataException("GitHub did not provide a valid SHA-256 digest for this download.", e); }
+        catch (FormatException e) { throw new InvalidDataException("O GitHub não deu um SHA-256 válido para este download.", e); }
     }
 
     static async Task DownloadWithRetries(MainWindow w, HttpClient http, string url, string? apiUrl, string path, long size,
@@ -390,7 +390,7 @@ static class Updater
             catch (Exception e) when (IsTransient(e))
             {
                 last = e;
-                if (apiUrl != null) w.Note($"Release download failed{StatusDetail(e)}; trying GitHub's API asset URL.");
+                if (apiUrl != null) w.Note($"O download da versão falhou{StatusDetail(e)}; tentando pelo endereço da API do GitHub.");
             }
 
             if (apiUrl != null)
@@ -407,10 +407,10 @@ static class Updater
             }
 
             if (attempt == RetryDelays.Length) break;
-            w.Note($"GitHub's download servers did not answer{StatusDetail(last)}. Retrying in {(int)RetryDelays[attempt].TotalSeconds} s...");
+            w.Note($"Os servidores de download do GitHub não responderam{StatusDetail(last)}. Tentando de novo em {(int)RetryDelays[attempt].TotalSeconds} s...");
             await Task.Delay(RetryDelays[attempt], token);
         }
-        throw new HttpRequestException($"GitHub's asset download failed after {RetryDelays.Length + 1} attempts: {last?.Message}",
+        throw new HttpRequestException($"O download do arquivo no GitHub falhou depois de {RetryDelays.Length + 1} tentativas: {last?.Message}",
             last, (last as HttpRequestException)?.StatusCode);
     }
 
@@ -439,7 +439,7 @@ static class Updater
                 while (true)
                 {
                     try { n = await from.ReadAsync(buffer, token); }
-                    catch (IOException e) { throw new HttpRequestException("The download connection ended unexpectedly.", e); }
+                    catch (IOException e) { throw new HttpRequestException("A conexão do download caiu.", e); }
                     if (n == 0) break;
                     await to.WriteAsync(buffer.AsMemory(0, n), token);
                     hash.AppendData(buffer, 0, n);
@@ -450,9 +450,9 @@ static class Updater
                         progress(Math.Min(1.0, (double)have / total));
                     }
                 }
-                if (total > 0 && have != total) throw new HttpRequestException($"The download ended early ({have >> 20} of {total >> 20} MB).");
+                if (total > 0 && have != total) throw new HttpRequestException($"O download terminou antes da hora ({have >> 20} de {total >> 20} MB).");
                 if (!CryptographicOperations.FixedTimeEquals(hash.GetHashAndReset(), expectedHash))
-                    throw new InvalidDataException("The download did not match GitHub's SHA-256 digest.");
+                    throw new InvalidDataException("O download não bate com o SHA-256 do GitHub.");
             }
             File.Move(partial, path, overwrite: true);
         }
@@ -464,7 +464,7 @@ static class Updater
     }
 
     static HttpRequestException HttpFailure(HttpResponseMessage response) =>
-        new($"GitHub returned HTTP {(int)response.StatusCode} ({response.ReasonPhrase}).", null, response.StatusCode);
+        new($"O GitHub respondeu HTTP {(int)response.StatusCode} ({response.ReasonPhrase}).", null, response.StatusCode);
 
     static bool IsTransient(Exception error) =>
         error is HttpRequestException request && (request.StatusCode is null || (int)request.StatusCode >= 500);

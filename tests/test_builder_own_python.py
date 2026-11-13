@@ -86,7 +86,7 @@ class WpfBuilderTests(unittest.TestCase):
         self.assertIn("Finished?.Invoke(tools.OwnPythonMissing ? Tools.OwnPythonMissingText :", start)
         check = RUNNER[RUNNER.index("public static async Task<(bool Ok, string Text)> Check("):]
         self.assertIn("if (tools.OwnPythonMissing) return (false, Tools.OwnPythonMissingText);", check)
-        self.assertEqual(RUNNER.count("restore it"), 1)   # (one text for both)
+        self.assertEqual(RUNNER.count("restaure"), 1)   # (one text for both; fork: em português)
 
 
 if __name__ == "__main__":

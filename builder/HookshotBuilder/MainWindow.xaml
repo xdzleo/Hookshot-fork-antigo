@@ -43,7 +43,7 @@
           </Image>
         </Grid>
         <TextBlock Text="Hookshot" FontSize="22" FontWeight="SemiBold" HorizontalAlignment="Center" Margin="0,16,0,0"/>
-        <TextBlock x:Name="SplashText" Text="Starting…" FontSize="13" Foreground="#A6FFFFFF" HorizontalAlignment="Center" Margin="0,6,0,0" MinHeight="20"/>
+        <TextBlock x:Name="SplashText" Text="Iniciando…" FontSize="13" Foreground="#A6FFFFFF" HorizontalAlignment="Center" Margin="0,6,0,0" MinHeight="20"/>
         <Border Width="200" Height="3" CornerRadius="1.5" Background="#14FFFFFF" Margin="0,16,0,0" ClipToBounds="True">
           <Border Width="80" HorizontalAlignment="Left" CornerRadius="1.5">
             <Border.Background>
@@ -104,12 +104,12 @@
             <RowDefinition Height="Auto"/>
           </Grid.RowDefinitions>
           <StackPanel>
-            <TextBlock x:Name="FilesTitle" Style="{StaticResource Heading}" Text="Build your game"/>
-            <TextBlock x:Name="FilesSub" Style="{StaticResource Sub}" Text="Pick your game files and where the game goes. Hookshot does the rest, once."/>
+            <TextBlock x:Name="FilesTitle" Style="{StaticResource Heading}" Text="Gere o seu jogo"/>
+            <TextBlock x:Name="FilesSub" Style="{StaticResource Sub}" Text="Escolha os arquivos do jogo e onde ele vai ficar. O Hookshot faz o resto, uma vez só."/>
           </StackPanel>
 
           <StackPanel Grid.Row="1">
-            <TextBlock x:Name="FoundLabel" Style="{StaticResource Label}" Text="FOUND ON THIS PC"/>
+            <TextBlock x:Name="FoundLabel" Style="{StaticResource Label}" Text="ACHADOS NESTE PC"/>
             <Border Style="{StaticResource Card}">
               <ScrollViewer MaxHeight="128" VerticalScrollBarVisibility="Auto">
                 <StackPanel x:Name="DumpList"/>
@@ -117,35 +117,61 @@
             </Border>
           </StackPanel>
 
-          <WrapPanel Grid.Row="2" Margin="0,10,0,0" VerticalAlignment="Center">
-            <TextBlock x:Name="NotListed" Style="{StaticResource Note}" Text="Not listed?" Margin="0,0,8,0"/>
-            <Button x:Name="BrowseButton" Style="{StaticResource LinkButton}" Content="Browse…" Click="BrowseNup"/>
-            <TextBlock x:Name="DropNote" Style="{StaticResource Faint}" FontSize="13" Text=" · or drop the file on this window · " VerticalAlignment="Center"/>
-            <Button x:Name="OtherWays" Style="{StaticResource LinkButton}" Foreground="{StaticResource InkSoft}" Content="romfs and exefs folders" Click="BrowseFolders"/>
+          <StackPanel Grid.Row="2" Margin="0,10,0,0">
+          <WrapPanel VerticalAlignment="Center">
+            <TextBlock x:Name="NotListed" Style="{StaticResource Note}" Text="Não está na lista?" Margin="0,0,8,0"/>
+            <Button x:Name="BrowseButton" Style="{StaticResource LinkButton}" Content="Procurar…" Click="BrowseNup"/>
+            <TextBlock x:Name="DropNote" Style="{StaticResource Faint}" FontSize="13" Text=" · ou solte o arquivo nesta janela · " VerticalAlignment="Center"/>
+            <Button x:Name="OtherWays" Style="{StaticResource LinkButton}" Foreground="{StaticResource InkSoft}" Content="pastas romfs e exefs" Click="BrowseFolders"/>
           </WrapPanel>
+
+          <!-- (fork) baixar da fonte onde a pessoa comprou o jogo: SourceDownload.cs, MainWindow.DownloadFromSource -->
+          <!-- (o balão verde de destaque: as cores Go e GoSoft do botão Jogar) -->
+          <Border x:Name="SourceCard" Margin="0,16,0,0" Padding="18,14,18,14" CornerRadius="12" BorderThickness="1.5" BorderBrush="{StaticResource Go}">
+            <Border.Background>
+              <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                <GradientStop Color="#2E5FB08A" Offset="0"/>
+                <GradientStop Color="#145FB08A" Offset="1"/>
+              </LinearGradientBrush>
+            </Border.Background>
+            <Border.Effect><DropShadowEffect Color="#5FB08A" BlurRadius="18" ShadowDepth="0" Opacity="0.35"/></Border.Effect>
+            <StackPanel>
+              <TextBlock x:Name="SourceLabel" Style="{StaticResource Label}" Text="OU BAIXE DA SUA FONTE" Foreground="{StaticResource Go}" Margin="0,0,0,8"/>
+              <Grid>
+                <Grid.ColumnDefinitions><ColumnDefinition/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                <TextBox x:Name="SourceUrl" Style="{StaticResource Path}" BorderBrush="{StaticResource Go}" AutomationProperties.Name="Endereço da fonte"
+                         ToolTip="O endereço (https://…) da lista da fonte onde você comprou o jogo"/>
+                <Button x:Name="SourceButton" Grid.Column="1" Style="{StaticResource Quiet}" Margin="10,0,0,0" BorderBrush="{StaticResource Go}"
+                        Foreground="{StaticResource Go}" Content="Baixar e instalar" Click="DownloadFromSource"/>
+              </Grid>
+              <TextBlock Style="{StaticResource Note}" FontSize="12" Margin="0,8,0,0" TextWrapping="Wrap"
+                         Text="Cole o endereço da fonte onde você comprou o jogo. O Hookshot acha nela o Ocarina of Time do Switch 2, baixa, junta os arquivos e gera o jogo sozinho."/>
+            </StackPanel>
+          </Border>
+          </StackPanel>
 
           <Grid Grid.Row="3">
             <Grid.ColumnDefinitions><ColumnDefinition/><ColumnDefinition Width="20"/><ColumnDefinition Width="200"/></Grid.ColumnDefinitions>
             <StackPanel>
-              <TextBlock x:Name="InstallLabel" Style="{StaticResource Label}" Text="INSTALL THE GAME TO"/>
+              <TextBlock x:Name="InstallLabel" Style="{StaticResource Label}" Text="INSTALAR O JOGO EM"/>
               <Grid>
                 <Grid.ColumnDefinitions><ColumnDefinition/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
                 <TextBox x:Name="OutPath" Style="{StaticResource Path}" TextChanged="PathsChanged"/>
-                <Button x:Name="ChangeButton" Grid.Column="1" Style="{StaticResource Quiet}" Margin="10,0,0,0" Content="Change" Click="BrowseOut"/>
+                <Button x:Name="ChangeButton" Grid.Column="1" Style="{StaticResource Quiet}" Margin="10,0,0,0" Content="Mudar" Click="BrowseOut"/>
               </Grid>
               <!-- the build files: how much, where (Storage.cs), and choosing the place -->
               <Grid Margin="0,8,0,0">
                 <Grid.ColumnDefinitions><ColumnDefinition/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
                 <TextBlock x:Name="WorkNote" Style="{StaticResource Note}" FontSize="12" TextWrapping="Wrap" VerticalAlignment="Center"/>
                 <Button x:Name="WorkChange" Grid.Column="1" Style="{StaticResource LinkButton}" FontSize="12" Margin="12,0,0,0" VerticalAlignment="Center"
-                        Content="Change" Click="BrowseWork"/>
+                        Content="Mudar" Click="BrowseWork"/>
                 <Button x:Name="WorkReset" Grid.Column="2" Style="{StaticResource LinkButton}" FontSize="12" Margin="12,0,0,0" VerticalAlignment="Center"
-                        Content="Default" Click="ResetWork"/>
+                        Content="Padrão" Click="ResetWork"/>
               </Grid>
             </StackPanel>
             <StackPanel Grid.Column="2">
-              <TextBlock x:Name="LanguageLabel" Style="{StaticResource Label}" Text="GAME LANGUAGE"/>
-              <ComboBox x:Name="LanguageBox" Style="{StaticResource Choice}" AutomationProperties.Name="Language" SelectionChanged="LanguageChanged"/>
+              <TextBlock x:Name="LanguageLabel" Style="{StaticResource Label}" Text="IDIOMA DO JOGO"/>
+              <ComboBox x:Name="LanguageBox" Style="{StaticResource Choice}" AutomationProperties.Name="Idioma" SelectionChanged="LanguageChanged"/>
             </StackPanel>
           </Grid>
 
@@ -160,10 +186,10 @@
               <TextBlock x:Name="ToolsNote" Grid.Column="1" Style="{StaticResource Note}" FontSize="12" Margin="8,0,0,0" VerticalAlignment="Center" TextWrapping="Wrap"/>
             </Grid>
             <StackPanel Grid.Column="2">
-              <TextBlock x:Name="WorkerLabel" Style="{StaticResource Label}" Text="BUILD WORKERS"/>
+              <TextBlock x:Name="WorkerLabel" Style="{StaticResource Label}" Text="PROCESSOS DE GERAÇÃO"/>
               <ComboBox x:Name="WorkerBox" Style="{StaticResource Choice}" IsEditable="False"
-                        AutomationProperties.Name="Build workers" AutomationProperties.LabeledBy="{Binding ElementName=WorkerLabel}"
-                        ToolTip="Automatic uses available memory and any existing worker override. More workers need more memory and may not be faster.">
+                        AutomationProperties.Name="Processos de geração" AutomationProperties.LabeledBy="{Binding ElementName=WorkerLabel}"
+                        ToolTip="Automático usa a memória disponível e qualquer ajuste de processos que já exista. Mais processos precisam de mais memória e podem não ser mais rápidos.">
                 <ComboBox.FocusVisualStyle>
                   <Style TargetType="Control">
                     <Setter Property="Template">
@@ -174,10 +200,10 @@
               </ComboBox>
             </StackPanel>
             <StackPanel Grid.Column="4">
-              <TextBlock x:Name="MemoryLabel" Style="{StaticResource Label}" Text="BUILD MEMORY (GB)"/>
+              <TextBlock x:Name="MemoryLabel" Style="{StaticResource Label}" Text="MEMÓRIA DA GERAÇÃO (GB)"/>
               <ComboBox x:Name="MemoryBox" Style="{StaticResource Choice}" IsEditable="False"
-                        AutomationProperties.Name="Build memory" AutomationProperties.LabeledBy="{Binding ElementName=MemoryLabel}"
-                        ToolTip="Automatic leaves free memory to your other programs. A number lets the compilers take that many GB together, even if your other programs need it: close them, or the PC may slow down.">
+                        AutomationProperties.Name="Memória da geração" AutomationProperties.LabeledBy="{Binding ElementName=MemoryLabel}"
+                        ToolTip="Automático deixa memória livre para os seus outros programas. Um número deixa os compiladores usarem até esses GB juntos, mesmo que os outros programas precisem: feche-os, ou o PC pode ficar lento.">
                 <ComboBox.FocusVisualStyle>
                   <Style TargetType="Control">
                     <Setter Property="Template">
@@ -189,30 +215,30 @@
             </StackPanel>
             <!-- (the update track, Updater.cs: Release, Release candidate or Nightly; the builder updates from it, saved once chosen) -->
             <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,12,0,0" VerticalAlignment="Center">
-              <TextBlock x:Name="TrackLabel" Style="{StaticResource Label}" Text="UPDATE TRACK" VerticalAlignment="Center" Margin="0,0,12,0"/>
+              <TextBlock x:Name="TrackLabel" Style="{StaticResource Label}" Text="CANAL DE ATUALIZAÇÃO" VerticalAlignment="Center" Margin="0,0,12,0"/>
               <ComboBox x:Name="TrackBox" Width="180" Style="{StaticResource Choice}" IsEditable="False"
-                        AutomationProperties.Name="Update track" AutomationProperties.LabeledBy="{Binding ElementName=TrackLabel}"
-                        ToolTip="Release: the tested versions. Release candidate: the next version, to try before it is released. Nightly: the newest development build, updated with every change."/>
+                        AutomationProperties.Name="Canal de atualização" AutomationProperties.LabeledBy="{Binding ElementName=TrackLabel}"
+                        ToolTip="Estável: as versões testadas. Candidata: a próxima versão, para testar antes de sair. Noturna: a versão de desenvolvimento mais nova, atualizada a cada mudança."/>
             </StackPanel>
             <!-- (make_game.py's last step, the game's prepare-shaders run: unticked, the game prepares them at its first start) -->
-            <CheckBox x:Name="PrepareTick" Grid.Row="1" Grid.Column="2" Grid.ColumnSpan="3" Style="{StaticResource Tick}" Content="Prepare shaders now"
+            <CheckBox x:Name="PrepareTick" Grid.Row="1" Grid.Column="2" Grid.ColumnSpan="3" Style="{StaticResource Tick}" Content="Preparar os shaders agora"
                       IsChecked="True" Margin="0,12,0,0"
-                      ToolTip="Prepares the game's shaders at the end of the build, a few minutes (longer on some GPUs). Unticked, the game prepares them at its first start, behind a black window."/>
+                      ToolTip="Prepara os shaders do jogo no fim da geração, alguns minutos (mais em algumas placas). Desmarcado, o jogo prepara na primeira vez que abrir, atrás de uma janela preta."/>
           </Grid>
 
           <!-- NVIDIA DLSS: off unless ticked. Ticking it shows NVIDIA's license; the build downloads NVIDIA's SDK under it
                (make_game.py, scripts/ngx_sdk.py). Nothing of NVIDIA's comes with the builder -->
           <StackPanel Grid.Row="5" Margin="0,14,0,0">
             <CheckBox x:Name="DlssTick" Style="{StaticResource Tick}" IsChecked="False" Click="DlssChanged"
-                      Content="NVIDIA DLSS (downloads NVIDIA's SDK under NVIDIA's license)"/>
+                      Content="NVIDIA DLSS (baixa o SDK da NVIDIA, sob a licença da NVIDIA)"/>
             <TextBlock Style="{StaticResource Note}" FontSize="12" Margin="26,4,0,0" TextWrapping="Wrap"
-                       Text="For NVIDIA RTX graphics cards. NVIDIA's files stay on this PC: never share a game folder built with them."/>
+                       Text="Para placas de vídeo NVIDIA RTX. Os arquivos da NVIDIA ficam neste PC: nunca compartilhe uma pasta de jogo gerada com eles."/>
             <!-- AMD FSR 4: off unless ticked. Ticking it shows AMD's license; the build downloads AMD's runtime under it
                  (make_game.py, scripts/ffx_sdk.py). Nothing of AMD's comes with the builder -->
             <CheckBox x:Name="FsrTick" Style="{StaticResource Tick}" IsChecked="False" Margin="0,10,0,0" Click="FsrChanged"
-                      Content="AMD FSR 4 (downloads AMD's runtime under AMD's license)"/>
+                      Content="AMD FSR 4 (baixa o runtime da AMD, sob a licença da AMD)"/>
             <TextBlock Style="{StaticResource Note}" FontSize="12" Margin="26,4,0,0" TextWrapping="Wrap"
-                       Text="For AMD Radeon graphics cards. It is chosen in the game's Insert menu, as the Upscaler."/>
+                       Text="Para placas de vídeo AMD Radeon. Ele é escolhido no menu Insert do jogo, como o Upscaler."/>
           </StackPanel>
 
           </Grid>
@@ -222,8 +248,8 @@
             <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
             <ProgressBar x:Name="SpaceBar" Style="{StaticResource Bar}" Foreground="{StaticResource Go}" Width="160" VerticalAlignment="Center"/>
             <TextBlock x:Name="SpaceText" Grid.Column="1" Style="{StaticResource Note}" FontSize="12" Margin="10,0,0,0" VerticalAlignment="Center"/>
-            <TextBlock x:Name="AboutText" Grid.Column="2" Style="{StaticResource Faint}" Text="About 45 min" Margin="0,0,14,0" VerticalAlignment="Center"/>
-            <Button x:Name="BuildButton" Grid.Column="3" Style="{StaticResource Primary}" Content="Build the game" IsEnabled="False" Click="StartBuild"/>
+            <TextBlock x:Name="AboutText" Grid.Column="2" Style="{StaticResource Faint}" Text="Uns 45 min" Margin="0,0,14,0" VerticalAlignment="Center"/>
+            <Button x:Name="BuildButton" Grid.Column="3" Style="{StaticResource Primary}" Content="Gerar o jogo" IsEnabled="False" Click="StartBuild"/>
           </Grid>
         </Grid>
 
@@ -242,7 +268,7 @@
               <TextBlock x:Name="RingText" Text="0%" FontSize="24" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center"/>
             </Grid>
             <StackPanel Grid.Column="1" VerticalAlignment="Center">
-              <TextBlock x:Name="BuildTitle" Style="{StaticResource Heading}" Text="Building your game"/>
+              <TextBlock x:Name="BuildTitle" Style="{StaticResource Heading}" Text="Gerando o seu jogo"/>
               <TextBlock x:Name="BuildNote" Style="{StaticResource Sub}"/>
               <ProgressBar x:Name="UpdateBar" Style="{StaticResource Bar}" Margin="0,18,0,0" Visibility="Collapsed"/>
             </StackPanel>
@@ -260,9 +286,9 @@
 
           <Grid Grid.Row="2">
             <Grid.ColumnDefinitions><ColumnDefinition/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
-            <ToggleButton x:Name="ShowLog" Style="{StaticResource Link}" HorizontalAlignment="Left" VerticalAlignment="Center" Content="Show details"
+            <ToggleButton x:Name="ShowLog" Style="{StaticResource Link}" HorizontalAlignment="Left" VerticalAlignment="Center" Content="Mostrar detalhes"
                           Checked="LogToggled" Unchecked="LogToggled"/>
-            <Button x:Name="CancelButton" Grid.Column="1" Style="{StaticResource Quiet}" Content="Cancel" Click="CancelBuild"/>
+            <Button x:Name="CancelButton" Grid.Column="1" Style="{StaticResource Quiet}" Content="Cancelar" Click="CancelBuild"/>
           </Grid>
         </Grid>
 
@@ -276,27 +302,27 @@
             <Path Data="M0,12 L10,22 L28,2" Stroke="{StaticResource Go}" StrokeThickness="4" StrokeStartLineCap="Round" StrokeEndLineCap="Round"
                   StrokeLineJoin="Round" HorizontalAlignment="Center" VerticalAlignment="Center"/>
           </Grid>
-          <TextBlock x:Name="ReadyTitle" Style="{StaticResource Heading}" Text="Your game is ready" HorizontalAlignment="Center" Margin="0,24,0,0"/>
+          <TextBlock x:Name="ReadyTitle" Style="{StaticResource Heading}" Text="O seu jogo está pronto" HorizontalAlignment="Center" Margin="0,24,0,0"/>
           <TextBlock x:Name="ReadyNote" Style="{StaticResource Sub}" HorizontalAlignment="Center" TextAlignment="Center"/>
           <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,28,0,0">
             <Button x:Name="PlayButton" Style="{StaticResource GoButton}" Click="Play">
               <StackPanel Orientation="Horizontal">
                 <Path Data="M0,0 L11,7 L0,14 Z" Fill="{StaticResource GoInk}" VerticalAlignment="Center" Margin="0,0,10,0"/>
-                <TextBlock x:Name="PlayText" Text="Play" FontSize="16" FontWeight="Bold" Foreground="{StaticResource GoInk}"/>
+                <TextBlock x:Name="PlayText" Text="Jogar" FontSize="16" FontWeight="Bold" Foreground="{StaticResource GoInk}"/>
               </StackPanel>
             </Button>
-            <Button x:Name="OpenButton" Style="{StaticResource Quiet}" Height="50" Margin="12,0,0,0" Content="Open folder" Click="OpenFolder"/>
+            <Button x:Name="OpenButton" Style="{StaticResource Quiet}" Height="50" Margin="12,0,0,0" Content="Abrir a pasta" Click="OpenFolder"/>
           </StackPanel>
           <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,22,0,0">
-            <CheckBox x:Name="DesktopTick" Style="{StaticResource Tick}" Content="Desktop shortcut" IsChecked="True" Click="ShortcutsChanged"/>
-            <CheckBox x:Name="StartTick" Style="{StaticResource Tick}" Content="Start menu entry" IsChecked="True" Margin="18,0,0,0" Click="ShortcutsChanged"/>
+            <CheckBox x:Name="DesktopTick" Style="{StaticResource Tick}" Content="Atalho na Área de Trabalho" IsChecked="True" Click="ShortcutsChanged"/>
+            <CheckBox x:Name="StartTick" Style="{StaticResource Tick}" Content="Item no menu Iniciar" IsChecked="True" Margin="18,0,0,0" Click="ShortcutsChanged"/>
           </StackPanel>
           <!-- what the builder keeps on this PC for quick updates (Storage.cs), and letting it go -->
           <StackPanel x:Name="StorageRow" Visibility="Collapsed" HorizontalAlignment="Center" Margin="0,26,0,0" MaxWidth="560">
             <TextBlock x:Name="StorageNote" Style="{StaticResource Note}" TextAlignment="Center" TextWrapping="Wrap"/>
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,8,0,0">
-              <Button x:Name="FreeButton" Style="{StaticResource LinkButton}" Content="Free up space" Click="FreeSpace"/>
-              <Button Style="{StaticResource LinkButton}" Content="Show folder" Margin="18,0,0,0" Click="ShowStorage"/>
+              <Button x:Name="FreeButton" Style="{StaticResource LinkButton}" Content="Liberar espaço" Click="FreeSpace"/>
+              <Button Style="{StaticResource LinkButton}" Content="Mostrar a pasta" Margin="18,0,0,0" Click="ShowStorage"/>
             </StackPanel>
           </StackPanel>
         </StackPanel>
@@ -306,23 +332,23 @@
           <TextBlock Style="{StaticResource Label}" Text="THE LEGEND OF ZELDA" HorizontalAlignment="Center"/>
           <TextBlock Style="{StaticResource Heading}" Text="Ocarina of Time" HorizontalAlignment="Center" FontSize="34" Margin="0,4,0,0"/>
           <TextBlock x:Name="LaunchVersion" Style="{StaticResource Sub}" HorizontalAlignment="Center" TextAlignment="Center" Margin="0,8,0,0"/>
-          <TextBlock x:Name="LaunchStatus" FontSize="13" Foreground="{StaticResource InkSoft}" Text="Checking for updates…"
+          <TextBlock x:Name="LaunchStatus" FontSize="13" Foreground="{StaticResource InkSoft}" Text="Procurando atualizações…"
                      HorizontalAlignment="Center" Margin="0,16,0,0"/>
           <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,28,0,0">
-            <Button x:Name="LaunchUpdate" Style="{StaticResource Primary}" Height="50" Padding="26,0" Margin="0,0,12,0" Content="Update"
+            <Button x:Name="LaunchUpdate" Style="{StaticResource Primary}" Height="50" Padding="26,0" Margin="0,0,12,0" Content="Atualizar"
                     Visibility="Collapsed" Click="LaunchUpdateClick"/>
             <Button x:Name="LaunchPlay" Style="{StaticResource GoButton}" Click="LaunchPlayClick">
               <StackPanel Orientation="Horizontal">
                 <Path Data="M0,0 L11,7 L0,14 Z" Fill="{StaticResource GoInk}" VerticalAlignment="Center" Margin="0,0,10,0"/>
-                <TextBlock Text="Play" FontSize="16" FontWeight="Bold" Foreground="{StaticResource GoInk}"/>
+                <TextBlock Text="Jogar" FontSize="16" FontWeight="Bold" Foreground="{StaticResource GoInk}"/>
               </StackPanel>
             </Button>
           </StackPanel>
           <Button x:Name="LaunchFolder" Style="{StaticResource LinkButton}" Foreground="{StaticResource InkFaint}" HorizontalAlignment="Center"
-                  Margin="0,22,0,0" Content="Open the game folder" Click="LaunchFolderClick"/>
+                  Margin="0,22,0,0" Content="Abrir a pasta do jogo" Click="LaunchFolderClick"/>
           <!-- (Save my pipeline list: the zip for the "Submit your pipelines" issue, LaunchShareClick) -->
           <Button x:Name="LaunchShare" Style="{StaticResource LinkButton}" Foreground="{StaticResource InkFaint}" HorizontalAlignment="Center"
-                  Margin="0,6,0,0" Content="Save my pipeline list (helps remove stutter)" Click="LaunchShareClick"/>
+                  Margin="0,6,0,0" Content="Salvar a minha lista de pipelines (ajuda a tirar travadas)" Click="LaunchShareClick"/>
           <TextBlock x:Name="LaunchShareStatus" FontSize="12" Foreground="{StaticResource InkSoft}" TextWrapping="Wrap" MaxWidth="560"
                      TextAlignment="Center" HorizontalAlignment="Center" Margin="0,4,0,0" Visibility="Collapsed"/>
         </StackPanel>
@@ -335,8 +361,8 @@
             <RowDefinition Height="Auto"/>
           </Grid.RowDefinitions>
           <StackPanel>
-            <TextBlock x:Name="ProblemTitle" Style="{StaticResource Heading}" Text="The build stopped"/>
-            <TextBlock x:Name="ProblemSub" Style="{StaticResource Sub}" Text="Nothing was changed in your game folder."/>
+            <TextBlock x:Name="ProblemTitle" Style="{StaticResource Heading}" Text="A geração parou"/>
+            <TextBlock x:Name="ProblemSub" Style="{StaticResource Sub}" Text="Nada mudou na pasta do seu jogo."/>
           </StackPanel>
           <Border Grid.Row="1" CornerRadius="10" BorderThickness="1" BorderBrush="#55E2776B" Padding="24,22" Margin="0,22,0,14" VerticalAlignment="Top">
             <Border.Background>
@@ -364,12 +390,12 @@
           <Grid Grid.Row="2">
             <Grid.ColumnDefinitions><ColumnDefinition/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
             <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-              <Button x:Name="ProblemDetails" Style="{StaticResource LinkButton}" Foreground="{StaticResource InkSoft}" Content="Show details" Click="ProblemShowDetails"/>
+              <Button x:Name="ProblemDetails" Style="{StaticResource LinkButton}" Foreground="{StaticResource InkSoft}" Content="Mostrar detalhes" Click="ProblemShowDetails"/>
               <TextBlock Style="{StaticResource Faint}" FontSize="13" Text="  ·  " VerticalAlignment="Center"/>
-              <Button x:Name="CopyReport" Style="{StaticResource LinkButton}" Foreground="{StaticResource InkSoft}" Content="Copy for a bug report" Click="CopyForReport"/>
+              <Button x:Name="CopyReport" Style="{StaticResource LinkButton}" Foreground="{StaticResource InkSoft}" Content="Copiar para relatar o problema" Click="CopyForReport"/>
             </StackPanel>
-            <Button x:Name="BackButton" Grid.Column="1" Style="{StaticResource Quiet}" Content="Back" Click="Back"/>
-            <Button x:Name="RepairButton" Grid.Column="2" Style="{StaticResource Primary}" Content="Repair" Margin="10,0,0,0" Click="Repair"/>
+            <Button x:Name="BackButton" Grid.Column="1" Style="{StaticResource Quiet}" Content="Voltar" Click="Back"/>
+            <Button x:Name="RepairButton" Grid.Column="2" Style="{StaticResource Primary}" Content="Reparar" Margin="10,0,0,0" Click="Repair"/>
           </Grid>
         </Grid>
       </Grid>
@@ -378,10 +404,10 @@
     <!-- the window's own buttons, over everything -->
     <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,6,6,0" Panel.ZIndex="9"
                 WindowChrome.IsHitTestVisibleInChrome="True">
-      <Button Style="{StaticResource Caption}" Click="Minimize" ToolTip="Minimize">
+      <Button Style="{StaticResource Caption}" Click="Minimize" ToolTip="Minimizar">
         <Rectangle Width="10" Height="1" Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"/>
       </Button>
-      <Button Style="{StaticResource Caption}" Click="CloseWindow" ToolTip="Close">
+      <Button Style="{StaticResource Caption}" Click="CloseWindow" ToolTip="Fechar">
         <Path Data="M0,0 L10,10 M10,0 L0,10" StrokeThickness="1.2" Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"/>
       </Button>
     </StackPanel>

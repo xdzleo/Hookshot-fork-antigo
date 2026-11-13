@@ -1,3 +1,15 @@
+> **Fork em português do [Hookshot](https://github.com/NotRexed/Hookshot) 2.2.0-rc.1.** O mesmo código do original, com duas
+> diferenças no Hookshot Builder do Windows:
+>
+> - **Baixar da sua fonte:** cole o endereço da fonte onde você comprou o jogo, e o Builder acha nela o Ocarina of Time do
+>   Switch 2, baixa (magnet ou link direto), junta os arquivos compactados (`.rar`, `.zip`, `.7z`; `.hookshot_exefs` vale como
+>   `exefs`) e gera o jogo sozinho.
+> - **Janela em português.**
+>
+> O Builder, o instalador e o jogo procuram versões e atualizações neste fork. Problemas do jogo em si: no
+> [repositório original](https://github.com/NotRexed/Hookshot/issues).
+> Baixe o `HookshotBuilder.exe` em [Releases](https://github.com/xdzleo/Hookshot/releases).
+
 <h1 align="center">
   <br>
   <a>

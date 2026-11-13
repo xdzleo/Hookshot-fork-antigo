@@ -62,10 +62,10 @@ static class Finder
     public static string Ago(DateTime t)
     {
         var d = DateTime.Now - t;
-        if (d.TotalDays < 1 && t.Date == DateTime.Today) return "modified today";
-        if (d.TotalDays < 2) return "modified yesterday";
-        if (d.TotalDays < 14) return $"{(int)d.TotalDays} days ago";
-        if (d.TotalDays < 60) return $"{(int)(d.TotalDays / 7)} weeks ago";
+        if (d.TotalDays < 1 && t.Date == DateTime.Today) return "modificado hoje";
+        if (d.TotalDays < 2) return "modificado ontem";
+        if (d.TotalDays < 14) return $"há {(int)d.TotalDays} dias";
+        if (d.TotalDays < 60) return $"há {(int)(d.TotalDays / 7)} semanas";
         return t.ToString("d MMM yyyy");
     }
 
@@ -102,7 +102,7 @@ static class Finder
                 sl.SetPath(exe);
                 sl.SetWorkingDirectory(gameFolder);
                 sl.SetIconLocation(icon, 0);
-                sl.SetDescription("The Legend of Zelda: Ocarina of Time, built by Hookshot");
+                sl.SetDescription("The Legend of Zelda: Ocarina of Time, gerado pelo Hookshot");
                 Directory.CreateDirectory(Path.GetDirectoryName(link)!);
                 ((System.Runtime.InteropServices.ComTypes.IPersistFile)sl).Save(link, true);
             }

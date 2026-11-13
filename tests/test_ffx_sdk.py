@@ -195,7 +195,7 @@ class BuilderTests(unittest.TestCase):
         start = self.code.index("const string FsrLicense")
         text = self.code[start:self.code.index(";", start)]
         self.assertIn(ffx_sdk.LICENSE_URL, text)
-        self.assertIn("Do you accept AMD's license?", text)
+        self.assertIn("Você aceita a licença da AMD?", text)   # (fork: a janela em português)
 
     def test_flags_only_with_the_tick(self):
         pair = '"--fetch-fsr-runtime", "--accept-amd-license"'

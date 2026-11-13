@@ -31,11 +31,11 @@ static class BuilderHome
             var root = Absolute(requested);
             var marked = IsMarked(root);
             if (portableRequested && !marked)
-                throw new IOException("The portable Builder home is missing its marker: " + root);
+                throw new IOException("A pasta portátil do Builder está sem a marca: " + root);
             return new(root, marked);
         }
         if (portableRequested)
-            throw new IOException("The portable Builder home was not passed to this process.");
+            throw new IOException("A pasta portátil do Builder não foi passada para este processo.");
 
         // Setup versions/<tag>/HookshotBuilder and ZIP fallback builders/<tag>/HookshotBuilder have the same depth.
         DirectoryInfo? directory = new(Path.GetFullPath(appDirectory));
@@ -48,11 +48,11 @@ static class BuilderHome
     {
         if (!Path.IsPathFullyQualified(path) || path.StartsWith(@"\\?\", StringComparison.Ordinal) ||
             path.StartsWith(@"\\.\", StringComparison.Ordinal))
-            throw new IOException("Use a fully qualified drive or UNC folder for the Builder home: " + path);
+            throw new IOException("Use uma pasta com caminho completo (disco ou UNC) para o Builder: " + path);
         var full = Path.TrimEndingDirectorySeparator(Path.GetFullPath(path));
         // The native setup's paths use MAX_PATH. Refuse an unrepresentable root instead of truncating it.
         if (full.Length >= 260)
-            throw new IOException("The Builder home is too long for the Windows setup: " + path);
+            throw new IOException("O caminho da pasta do Builder é longo demais para o instalador do Windows: " + path);
         return full;
     }
 
@@ -64,12 +64,12 @@ static class BuilderHome
             var bytes = new byte[MarkerText.Length + 3];
             var length = file.ReadAtLeast(bytes, bytes.Length, throwOnEndOfStream: false);
             if (length > MarkerText.Length + 2)
-                throw new IOException("The portable Builder marker is too long: " + root);
+                throw new IOException("A marca da pasta portátil do Builder é longa demais: " + root);
             var text = new UTF8Encoding(false, true).GetString(bytes, 0, length);
             if (text.TrimEnd('\r', '\n') != MarkerText)
-                throw new IOException("The portable Builder marker is not valid: " + root);
+                throw new IOException("A marca da pasta portátil do Builder não é válida: " + root);
             if (Directory.GetParent(Path.GetFullPath(root)) == null)
-                throw new IOException("A portable Builder home must be a dedicated folder, not a volume root.");
+                throw new IOException("A pasta portátil do Builder tem de ser uma pasta só dela, não a raiz de um disco.");
             return true;
         }
         catch (FileNotFoundException) { return false; }
@@ -90,7 +90,7 @@ static class BuilderHome
     {
         if (!home.Portable || string.IsNullOrEmpty(path)) return path;
         if (Path.IsPathRooted(path) && !Path.IsPathFullyQualified(path))
-            throw new IOException("A portable path must be relative or fully qualified: " + path);
+            throw new IOException("Um caminho portátil tem de ser relativo ou completo: " + path);
         var full = Path.GetFullPath(path, home.Root);
         return string.Equals(Path.GetPathRoot(full), Path.GetPathRoot(home.Root), StringComparison.OrdinalIgnoreCase)
             ? Path.GetRelativePath(home.Root, full) : full;
@@ -101,7 +101,7 @@ static class BuilderHome
     internal static string? LoadPath(Home home, string? path)
     {
         if (!home.Portable || string.IsNullOrEmpty(path) || Path.IsPathFullyQualified(path)) return path;
-        if (Path.IsPathRooted(path)) throw new IOException("A portable path must be relative or fully qualified: " + path);
+        if (Path.IsPathRooted(path)) throw new IOException("Um caminho portátil tem de ser relativo ou completo: " + path);
         return Path.GetFullPath(path, home.Root);
     }
 }

@@ -24,7 +24,7 @@ static class ShaderStep
     /// The line under the row of a finished build when the shaders were not prepared, or null when they were (a check mark).
     /// began: the game's @@stage shaders came; reason: make_game's not-prepared line
     public static string? Skipped(bool began, string? reason) =>
-        reason != null ? $"Left to the game's first start: {reason}"
+        reason != null ? $"Ficou para a primeira vez que o jogo abrir: {reason}"
         : began ? null
-        : "Left to the game's first start";
+        : "Ficou para a primeira vez que o jogo abrir";
 }
